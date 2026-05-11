@@ -120,7 +120,7 @@
         .notif-item { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--accent-color); position: relative; }
         .notif-time { position: absolute; top: 10px; right: 15px; font-size: 10px; color: #777; }
 
-        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000; }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000; border: 1px solid #333; }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
         .team-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; font-size: 14px; align-items: center; }
@@ -129,30 +129,32 @@
         hr.divider { border: 0; border-top: 1px solid #444; margin: 20px 0; }
 
         /* Live Badge Animation */
-        .live-badge {
-            background: red;
-            color: white;
-            font-size: 10px;
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-weight: bold;
-            animation: blink 1.5s infinite;
-        }
+        .live-badge { background: red; color: white; font-size: 10px; padding: 3px 8px; border-radius: 5px; font-weight: bold; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
-        }
+        /* Empty State Styles */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; color: #777; background: #161616; border-radius: 10px; border: 1px dashed #333; margin-top: 15px; }
+        .empty-state i { font-size: 50px; color: #444; margin-bottom: 15px; }
+        .empty-state h4 { margin: 0 0 5px 0; color: #aaa; font-size: 16px; }
+        .empty-state p { margin: 0; font-size: 12px; }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
-        }
+        /* Toast Notifications Styles */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 250px; padding: 15px 20px; border-radius: 8px; color: white; font-size: 13px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; gap: 12px; align-items: center; opacity: 0; transform: translateX(100%); animation: slideIn 0.3s forwards; }
+        .toast i { font-size: 18px; }
+        .toast.success { background: #1a1a1a; border-left: 5px solid var(--success); }
+        .toast.error { background: #1a1a1a; border-left: 5px solid var(--squad); }
+        .toast.info { background: #1a1a1a; border-left: 5px solid var(--accent-color); }
+        .toast.fade-out { animation: fadeOutToast 0.3s forwards; }
+        @keyframes slideIn { to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOutToast { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; display: none; } }
     </style>
 </head>
 <body>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
 
     <div id="loader" class="loading-overlay">
         <div style="text-align: center;">
@@ -168,7 +170,7 @@
         <div id="register-fields" style="display: none;">
             <input type="text" id="auth-name" class="auth-input" placeholder="আপনার নাম">
             <input type="number" id="auth-phone" class="auth-input" placeholder="হোয়াটসঅ্যাপ নম্বর">
-            <input type="number" id="auth-game-uid" class="auth-input" placeholder="গেম UID (যেমন: 12345678)">
+            <input type="number" id="auth-game-uid" class="auth-input" placeholder="গেম UID (৮-১২ সংখ্যা)">
             <input type="text" id="auth-refer" class="auth-input" placeholder="রেফার কোড (যদি থাকে - অপশনাল)">
         </div>
         
@@ -230,11 +232,12 @@
                     <span class="live-badge"><i class="fas fa-circle"></i> LIVE</span>
                 </h3>
 
-                <!-- Video Player -->
+                <!-- Video Player / Empty State -->
                 <div class="video-wrapper" id="yt-player">
-                    <!-- Default text if no stream is added -->
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #111; color: #555;">
-                        বর্তমানে কোনো লাইভ চলছে না
+                    <!-- Default text if no stream is added with new Empty State design -->
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #161616; flex-direction: column; color: #555;">
+                        <i class="fas fa-tv" style="font-size: 40px; margin-bottom: 10px; color: #444;"></i>
+                        <p style="margin: 0; font-size: 13px; font-weight: bold; color: #777;">বর্তমানে কোনো লাইভ চলছে না</p>
                     </div>
                 </div>
 
@@ -347,7 +350,7 @@
             <label style="font-size:12px; color:#aaa;">নাম</label>
             <input type="text" id="edit-name" class="auth-input">
             
-            <label style="font-size:12px; color:#aaa;">গেম UID</label>
+            <label style="font-size:12px; color:#aaa;">গেম UID (৮-১২ সংখ্যা)</label>
             <input type="number" id="edit-uid" class="auth-input">
             
             <label style="font-size:12px; color:#aaa;">ফোন নম্বর</label>
@@ -378,7 +381,7 @@
     <div id="join-modal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0" id="join-modal-title">টিমে জয়েন করুন</h3>
-            <input type="number" id="join-uid" class="auth-input" placeholder="গেম UID (যেমন: 1234567)">
+            <input type="number" id="join-uid" class="auth-input" placeholder="গেম UID (৮-১২ সংখ্যা)">
             
             <div id="team-inputs">
                 <input type="text" id="join-team-code" class="auth-input" placeholder="টিম কোড দিন (যেমন: TEAM1)">
@@ -427,7 +430,7 @@
             
             <p style="font-size: 12px; color: #aaa; margin-top: 10px; margin-bottom: 15px;">* রেজাল্ট সাবমিট করার পর আমাদের টেলিগ্রামে প্রমাণের স্ক্রিনশট জমা দিন। এডমিন চেক করে আপনার ওয়ালেটে প্রাইজ এড করে দিবে।</p>
             
-            <button class="btn btn-telegram" id="btn-submit-result" onclick="submitMatchResult()"><i class="fab fa-telegram"></i> Submit & Send Proof via Telegram</button>
+            <button class="btn btn-telegram" id="btn-submit-result" onclick="submitMatchResult()"><i class="fab fa-telegram"></i> Submit & Send Proof</button>
             <button class="btn" style="background:#444" onclick="closeModal()">Cancel</button>
         </div>
     </div>
@@ -494,6 +497,54 @@
         let currentUserGameUid = ""; 
         let userFullData = {};
 
+        // XSS Protection Helper Function
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, match => {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[match];
+            });
+        }
+
+        // Custom Toast Notification Function
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fa-info-circle';
+            if(type === 'success') icon = 'fa-check-circle';
+            else if(type === 'error') icon = 'fa-exclamation-circle';
+            
+            toast.innerHTML = `<i class="fas ${icon}"></i> <span>${escapeHTML(message)}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        // Web Share API Function
+        function shareMatch(title, time, entryFee) {
+            const shareData = {
+                title: 'Gamer Hub Pro - Tournament',
+                text: `🔥 টুর্নামেন্ট অ্যালার্ট! 🔥\nম্যাচ: ${title}\nসময়: ${time}\nএন্ট্রি ফি: ৳${entryFee}\n\nতাড়াতাড়ি Gamer Hub Pro অ্যাপে জয়েন করুন!`,
+                url: window.location.href
+            };
+            if (navigator.share) {
+                navigator.share(shareData).catch(err => console.log('Error sharing', err));
+            } else {
+                copyText(shareData.text);
+                showToast("শেয়ার টেক্সট কপি হয়েছে!", "success");
+            }
+        }
+
         function toggleLoading(btnId, isLoading, defaultText) {
             const btn = document.getElementById(btnId);
             if (isLoading) {
@@ -530,7 +581,7 @@
         async function handleAuth() {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-pass').value;
-            if(!email || !pass) return alert("ইমেইল ও পাসওয়ার্ড দিন");
+            if(!email || !pass) return showToast("ইমেইল ও পাসওয়ার্ড দিন", "error");
             
             toggleLoading('btn-auth', true, isLogin ? 'Login' : 'Register');
 
@@ -545,35 +596,39 @@
                     
                     if(!name || !phone || !gameUid) {
                         toggleLoading('btn-auth', false, 'Register');
-                        return alert("নাম, ফোন নাম্বার এবং গেম UID দিন");
+                        return showToast("নাম, ফোন নাম্বার এবং গেম UID দিন", "error");
+                    }
+                    if(gameUid.length < 8 || gameUid.length > 12) {
+                        toggleLoading('btn-auth', false, 'Register');
+                        return showToast("গেম UID অবশ্যই ৮-১২ সংখ্যার হতে হবে", "error");
                     }
                     
                     const res = await auth.createUserWithEmailAndPassword(email, pass);
                     await db.ref('users/' + res.user.uid).set({
-                        name: name, 
-                        phone: phone, 
-                        gameUid: gameUid, 
+                        name: escapeHTML(name), 
+                        phone: escapeHTML(phone), 
+                        gameUid: escapeHTML(gameUid), 
                         balance: 0,
                         totalKills: 0, 
                         totalWon: 0,   
-                        usedReferCode: referCode,
+                        usedReferCode: escapeHTML(referCode),
                         referCode: "GHP" + Math.floor(1000 + Math.random() * 8999),
                         joinedAt: firebase.database.ServerValue.TIMESTAMP
                     });
                 }
             } catch(e) { 
-                alert(e.message); 
+                showToast(e.message, "error"); 
             }
             toggleLoading('btn-auth', false, isLogin ? 'Login' : 'Register');
         }
 
         async function forgotPassword() {
             const email = document.getElementById('auth-email').value;
-            if(!email) return alert("পাসওয়ার্ড রিসেট করতে প্রথমে বক্সে আপনার ইমেইলটি লিখুন, তারপর আবার এই লেখায় ক্লিক করুন।");
+            if(!email) return showToast("পাসওয়ার্ড রিসেট করতে বক্সে আপনার ইমেইলটি লিখুন", "info");
             try {
                 await auth.sendPasswordResetEmail(email);
-                alert("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।");
-            } catch(e) { alert(e.message); }
+                showToast("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।", "success");
+            } catch(e) { showToast(e.message, "error"); }
         }
 
         auth.onAuthStateChanged(user => {
@@ -581,7 +636,6 @@
             if(user) {
                 document.getElementById('auth-page').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
-                
                 document.getElementById('u-email').innerText = user.email || 'No Email';
                 
                 loadAppData(user.uid);
@@ -599,16 +653,16 @@
             db.ref('settings/whatsapp').on('value', s => document.getElementById('wa-link').href = "https://wa.me/" + s.val());
             db.ref('settings/telegram').on('value', s => document.getElementById('tg-link').href = s.val());
             db.ref('settings/yt_stream').on('value', s => {
-                if(s.val()) document.getElementById('yt-player').innerHTML = `<iframe src="${s.val()}" allowfullscreen></iframe>`;
+                if(s.val()) document.getElementById('yt-player').innerHTML = `<iframe src="${escapeHTML(s.val())}" allowfullscreen></iframe>`;
             });
             
             db.ref('settings/bkash').on('value', s => {
                 const b = s.val();
-                document.getElementById('admin-bkash').innerText = b ? b + " (Personal)" : "Not Set";
+                document.getElementById('admin-bkash').innerText = b ? escapeHTML(b) + " (Personal)" : "Not Set";
             });
             db.ref('settings/nagad').on('value', s => {
                 const n = s.val();
-                document.getElementById('admin-nagad').innerText = n ? n + " (Personal)" : "Not Set";
+                document.getElementById('admin-nagad').innerText = n ? escapeHTML(n) + " (Personal)" : "Not Set";
             });
 
             db.ref('users/' + uid).on('value', s => {
@@ -633,18 +687,16 @@
                 
                 db.ref('match_joins').on('value', joinSnap => {
                     const allJoins = joinSnap.val() || {};
-                    upContainer.innerHTML = ""; 
-                    onContainer.innerHTML = "";
-                    compContainer.innerHTML = ""; 
-
-                    let ongoingCount = 0;
+                    let upHTML = "", onHTML = "", compHTML = "";
+                    let upCount = 0, onCount = 0, compCount = 0;
 
                     snap.forEach(child => {
                         const m = child.val();
                         const mid = child.key;
-                        const status = m.status || 'upcoming'; // upcoming, ongoing, completed, cancelled
+                        const status = m.status || 'upcoming'; 
                         const category = m.category || 'Squad'; 
                         const rules = m.rules || 'কোনো নির্দিষ্ট নিয়মাবলি দেওয়া হয়নি। হ্যাক ব্যবহার সম্পূর্ণ নিষিদ্ধ।';
+                        const safeTitle = m.title ? m.title.replace(/'/g, "\\'").replace(/"/g, '\\"') : "Tournament";
                         
                         if (filterGameVal !== 'All') {
                             const dbGameName = m.gameName || 'Free Fire'; 
@@ -678,14 +730,11 @@
                         let actionBtn = "";
                         let statusBadge = "";
 
-                        // Handle UI based on STATUS
                         if(status === 'cancelled') {
                             actionBtn = `<button class="btn" style="background:#555; cursor:not-allowed;" disabled>ম্যাচ ক্যানসেলড (ফি রিফান্ডেড)</button>`;
                         } else if(status === 'completed') {
                             actionBtn = `<button class="btn btn-view" onclick="openViewResultsModal('${mid}')">View Results</button>`;
                         } else if (status === 'ongoing') {
-                            // NEW: ONGOING/LIVE STATUS UI
-                            ongoingCount++;
                             statusBadge = `<span class="live-badge" style="position: absolute; top: 10px; left: 10px;"><i class="fas fa-circle"></i> LIVE</span>`;
                             actionBtn = `
                                 <div style="display:flex; gap:10px; margin-top:10px;">
@@ -693,7 +742,6 @@
                                     ${userJoined ? `<button class="btn btn-success" style="margin-top:0;" onclick="openResultModal('${mid}')">Submit Result</button>` : ''}
                                 </div>`;
                         } else {
-                            // UPCOMING STATUS UI
                             if(userJoined) {
                                 actionBtn = `<div style="display:flex; gap:10px; margin-top:10px;">
                                      <button class="btn btn-view" style="margin-top:0;" onclick="viewTeam('${mid}')">View ${category === 'Solo'?'Entry':'Team'}</button>
@@ -707,11 +755,10 @@
                         }
 
                         const roomBoxContent = userJoined 
-                            ? `<span style="font-size:12px">ID: ${m.roomID || 'Coming soon'}</span>
-                               <i class="fas fa-copy" style="cursor:pointer;" onclick="copyText('${m.roomID}')"></i>`
+                            ? `<span style="font-size:12px">ID: ${escapeHTML(m.roomID || 'Coming soon')}</span>
+                               <i class="fas fa-copy" style="cursor:pointer;" onclick="copyText('${escapeHTML(m.roomID)}')"></i>`
                             : `<span style="font-size:12px; color: #ff416c;"><i class="fas fa-lock"></i> জয়েন করলে রুম আইডি দেখতে পাবেন</span>`;
 
-                        // Progress Bar (Only show if upcoming)
                         let teamStatsHtml = "";
                         if (status === 'upcoming') {
                             teamStatsHtml = `
@@ -730,7 +777,7 @@
                             if(!isMinMet) {
                                 teamStatsHtml += `<p style="margin: 0; color: #aaa; font-size: 11px;">
                                     <i class="fas fa-exclamation-triangle" style="color: var(--warning)"></i>
-                                    আরও <b>${neededForMin}</b> টি টিম দরকার। টার্গেট পূরণ না হলে ম্যাচ ক্যানসেল করে ব্যালেন্স রিফান্ড করা হবে।
+                                    আরও <b>${neededForMin}</b> টি টিম দরকার। পূরণ না হলে ফি রিফান্ড করা হবে।
                                 </p>`;
                             } else if(!isFull) {
                                 teamStatsHtml += `<p style="margin: 0; color: var(--success); font-size: 11px;">
@@ -738,54 +785,56 @@
                                 </p>`;
                             } else {
                                 teamStatsHtml += `<p style="margin: 0; color: #e74c3c; font-size: 11px;">
-                                    <i class="fas fa-ban"></i> স্লট ফুল হয়ে গেছে! আর কোনো টিম জয়েন করতে পারবে না।
+                                    <i class="fas fa-ban"></i> স্লট ফুল হয়ে গেছে! আর কোনো টিম জয়েন করতে পারবেবিধা।
                                 </p>`;
                             }
                             teamStatsHtml += `</div>`;
                         }
 
+                        // Added Rules and Share buttons side by side
                         const matchCardHTML = `
                             <div class="match-card">
                                 ${statusBadge}
-                                <span class="cat-badge cat-${category}">${category}</span>
-                                <img src="${m.image || 'https://via.placeholder.com/400x180?text=Match+Banner'}" class="match-banner">
+                                <span class="cat-badge cat-${escapeHTML(category)}">${escapeHTML(category)}</span>
+                                <img src="${escapeHTML(m.image || 'https://via.placeholder.com/400x180?text=Match+Banner')}" class="match-banner">
                                 <div class="match-info">
-                                    <h3 style="margin: 0;">${m.title}</h3>
+                                    <h3 style="margin: 0;">${escapeHTML(m.title)}</h3>
                                     <div class="match-meta">
-                                        <span><i class="fas fa-clock"></i> ${m.time}</span>
-                                        <span><i class="fas fa-map"></i> ${m.map}</span>
-                                        <span><i class="fas fa-money-bill-wave"></i> এন্ট্রি: ${m.entry}৳</span>
-                                        <span><i class="fas fa-trophy"></i> প্রাইজ: ${m.prize}৳</span>
+                                        <span><i class="fas fa-clock"></i> ${escapeHTML(m.time)}</span>
+                                        <span><i class="fas fa-map"></i> ${escapeHTML(m.map)}</span>
+                                        <span><i class="fas fa-money-bill-wave"></i> এন্ট্রি: ${escapeHTML(m.entry)}৳</span>
+                                        <span><i class="fas fa-trophy"></i> প্রাইজ: ${escapeHTML(m.prize)}৳</span>
                                     </div>
                                     
                                     ${teamStatsHtml}
                                     
-                                    <button class="btn btn-rules" onclick="openRulesModal('${encodeURIComponent(rules)}')"><i class="fas fa-info-circle"></i> নিয়মাবলি দেখুন</button>
+                                    <div style="display:flex; gap:10px; margin-top:5px;">
+                                        <button class="btn btn-rules" onclick="openRulesModal('${encodeURIComponent(rules)}')"><i class="fas fa-info-circle"></i> নিয়মাবলি</button>
+                                        <button class="btn btn-rules" style="color:#3498db; border-color:#3498db;" onclick="shareMatch('${safeTitle}', '${escapeHTML(m.time)}', '${escapeHTML(m.entry)}')"><i class="fas fa-share-alt"></i> শেয়ার</button>
+                                    </div>
                                     
                                     ${status === 'upcoming' ? `<div class="room-box">${roomBoxContent}</div>` : ''}
                                     ${actionBtn}
                                 </div>
                             </div>`;
 
-                        if (status === 'upcoming') upContainer.innerHTML += matchCardHTML;
-                        else if (status === 'ongoing') onContainer.innerHTML += matchCardHTML;
-                        else compContainer.innerHTML += matchCardHTML;
+                        if (status === 'upcoming') { upHTML += matchCardHTML; upCount++; }
+                        else if (status === 'ongoing') { onHTML += matchCardHTML; onCount++; }
+                        else { compHTML += matchCardHTML; compCount++; }
                     });
 
-                    // Show empty message if no ongoing matches
-                    if(ongoingCount === 0) {
-                        onContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#777;"><i class="fas fa-video-slash fa-3x"></i><p>বর্তমানে কোনো ম্যাচ লাইভ চলছে না</p></div>';
-                    }
+                    // Rendering Empty States if no match is found
+                    upContainer.innerHTML = upCount > 0 ? upHTML : `<div class="empty-state"><i class="fas fa-calendar-times"></i><h4>কোনো ম্যাচ নেই</h4><p>বর্তমানে কোনো আসন্ন ম্যাচ পাওয়া যায়নি।</p></div>`;
+                    onContainer.innerHTML = onCount > 0 ? onHTML : `<div class="empty-state"><i class="fas fa-video-slash"></i><h4>লাইভ নেই</h4><p>বর্তমানে কোনো ম্যাচ লাইভ চলছে না।</p></div>`;
+                    compContainer.innerHTML = compCount > 0 ? compHTML : `<div class="empty-state"><i class="fas fa-history"></i><h4>হিস্ট্রি নেই</h4><p>এখনও কোনো ম্যাচ শেষ হয়নি।</p></div>`;
                 });
             });
         }
 
-        // Helper to jump to Watch Tab from a Live Match
         function goToWatchTab() {
             showPage('watch', document.getElementById('nav-watch'));
         }
 
-        // Leaderboard
         async function loadLeaderboard() {
             const container = document.getElementById('match-container-leaderboard');
             container.innerHTML = '<div style="text-align:center; margin-top:20px; color:#aaa;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>লোড হচ্ছে...</div>';
@@ -800,11 +849,11 @@
                 });
                 
                 users.sort((a,b) => b.kills - a.kills); 
-                
                 container.innerHTML = '<h3 style="color:var(--accent-color); margin-bottom:15px;"><i class="fas fa-medal"></i> টপ কিলার্স লিডারবোর্ড</h3>';
                 
+                // Empty State for Leaderboard
                 if(users.length === 0) {
-                    container.innerHTML += '<p style="text-align:center; color:#777;">এখনও কোনো ডেটা নেই</p>';
+                    container.innerHTML += `<div class="empty-state"><i class="fas fa-chart-bar"></i><h4>ডেটা নেই</h4><p>লিডারবোর্ডে এখন পর্যন্ত কারো ডেটা যুক্ত হয়নি।</p></div>`;
                     return;
                 }
 
@@ -818,8 +867,8 @@
                         <div class="list-item" style="cursor:default; align-items:center;">
                             <div>
                                 <span style="font-size:16px; font-weight:bold; margin-right:8px; color:#aaa;">#${index+1}</span>
-                                <span style="font-weight:bold;">${u.name}</span> ${medalIcon}<br>
-                                <span style="font-size:11px; color:#888;">UID: ${u.uid}</span>
+                                <span style="font-weight:bold;">${escapeHTML(u.name)}</span> ${medalIcon}<br>
+                                <span style="font-size:11px; color:#888;">UID: ${escapeHTML(u.uid)}</span>
                             </div>
                             <div style="text-align:right;">
                                 <span style="color:var(--primary-color); font-weight:bold; display:block;">${u.kills} Kills</span>
@@ -831,20 +880,18 @@
             } catch(e) { container.innerHTML = '<p style="color:red;">Error loading leaderboard.</p>'; }
         }
 
-        // Load Notifications
         function loadNotifications() {
             db.ref('notifications').orderByChild('time').limitToLast(20).on('value', snap => {
                 const notifContainer = document.getElementById('notif-list');
                 const badge = document.getElementById('notif-badge');
                 
                 if(!snap.exists()) {
-                    notifContainer.innerHTML = '<p style="text-align:center; color:#777; margin-top:20px;">কোনো নোটিফিকেশন নেই</p>';
+                    notifContainer.innerHTML = `<div class="empty-state"><i class="fas fa-bell-slash"></i><h4>নোটিফিকেশন নেই</h4><p>আপনার জন্য কোনো নতুন নোটিফিকেশন নেই।</p></div>`;
                     badge.style.display = 'none';
                     return;
                 }
                 
                 badge.style.display = 'block';
-                
                 let notifs = [];
                 snap.forEach(child => { notifs.push(child.val()); });
                 notifs.reverse(); 
@@ -854,8 +901,8 @@
                     const date = new Date(n.time).toLocaleString('en-GB');
                     notifContainer.innerHTML += `
                         <div class="notif-item">
-                            <h4 style="margin: 0 0 5px 0;">${n.title}</h4>
-                            <p style="margin: 0; font-size: 13px; color: #ccc;">${n.body}</p>
+                            <h4 style="margin: 0 0 5px 0;">${escapeHTML(n.title)}</h4>
+                            <p style="margin: 0; font-size: 13px; color: #ccc;">${escapeHTML(n.body)}</p>
                             <span class="notif-time">${date}</span>
                         </div>
                     `;
@@ -863,7 +910,6 @@
             });
         }
 
-        // Stats
         async function loadUserStats(uid) {
             try {
                 const joinsSnap = await db.ref('match_joins').once('value');
@@ -885,7 +931,6 @@
             } catch(e) { console.log(e); }
         }
 
-        // Profile
         function openSettingsModal() {
             document.getElementById('edit-name').value = userFullData.name || '';
             document.getElementById('edit-uid').value = userFullData.gameUid || '';
@@ -899,23 +944,24 @@
             const newName = document.getElementById('edit-name').value;
             const newUid = document.getElementById('edit-uid').value;
             const newPhone = document.getElementById('edit-phone').value;
-            if(!newName || !newUid || !newPhone) return alert("তথ্য অসম্পূর্ণ");
+            if(!newName || !newUid || !newPhone) return showToast("তথ্য অসম্পূর্ণ", "error");
+            if(newUid.length < 8 || newUid.length > 12) return showToast("গেম UID অবশ্যই ৮-১২ সংখ্যার হতে হবে", "error");
             
             toggleLoading('btn-update-profile', true, 'Update Profile');
             try {
                 await db.ref(`users/${auth.currentUser.uid}`).update({
-                    name: newName, gameUid: newUid, phone: newPhone
+                    name: escapeHTML(newName), gameUid: escapeHTML(newUid), phone: escapeHTML(newPhone)
                 });
-                alert("প্রোফাইল আপডেট হয়েছে!");
-            } catch(e) { alert(e.message); }
+                showToast("প্রোফাইল আপডেট হয়েছে!", "success");
+            } catch(e) { showToast(e.message, "error"); }
             toggleLoading('btn-update-profile', false, 'Update Profile');
         }
 
         async function changePassword() {
             const oldPass = document.getElementById('edit-old-pass').value;
             const newPass = document.getElementById('edit-new-pass').value;
-            if(!oldPass || !newPass) return alert("পাসওয়ার্ড দিন");
-            if(newPass.length < 6) return alert("নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে");
+            if(!oldPass || !newPass) return showToast("পাসওয়ার্ড দিন", "error");
+            if(newPass.length < 6) return showToast("নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে", "error");
             
             toggleLoading('btn-change-pass', true, 'Change Password');
             try {
@@ -923,17 +969,16 @@
                 const credential = firebase.auth.EmailAuthProvider.credential(user.email, oldPass);
                 await user.reauthenticateWithCredential(credential);
                 await user.updatePassword(newPass);
-                alert("পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!");
+                showToast("পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!", "success");
                 document.getElementById('edit-old-pass').value = '';
                 document.getElementById('edit-new-pass').value = '';
             } catch(e) {
-                if(e.code === 'auth/wrong-password') alert("পুরাতন পাসওয়ার্ড ভুল হয়েছে");
-                else alert(e.message);
+                if(e.code === 'auth/wrong-password') showToast("পুরাতন পাসওয়ার্ড ভুল হয়েছে", "error");
+                else showToast(e.message, "error");
             }
             toggleLoading('btn-change-pass', false, 'Change Password');
         }
 
-        // Transactions
         async function loadTransactionHistory(uid) {
             const txContainer = document.getElementById('tx-history');
             try {
@@ -945,7 +990,7 @@
                 wdSnap.forEach(c => { transactions.push({...c.val(), type: 'Withdraw'}) });
 
                 if(transactions.length === 0) {
-                    txContainer.innerHTML = '<p style="color:#777; font-size:12px;">কোনো ট্রানজেকশন পাওয়া যায়নি।</p>';
+                    txContainer.innerHTML = '<p style="color:#777; font-size:12px; text-align:center;">কোনো ট্রানজেকশন পাওয়া যায়নি।</p>';
                     return;
                 }
                 transactions.sort((a, b) => b.time - a.time);
@@ -956,7 +1001,7 @@
                         <div class="tx-item tx-${t.status}">
                             <div>
                                 <b style="color:${t.type === 'Add Money' ? 'var(--success)' : '#e74c3c'}">${t.type}</b><br>
-                                <span style="font-size:11px; color:#888;">${date} • ${t.method}</span>
+                                <span style="font-size:11px; color:#888;">${date} • ${escapeHTML(t.method)}</span>
                             </div>
                             <div style="text-align:right;">
                                 <b>৳${t.amount}</b><br>
@@ -967,7 +1012,6 @@
             } catch(e) { txContainer.innerHTML = '<p style="color:red; font-size:12px;">হিস্ট্রি লোড করতে সমস্যা হয়েছে।</p>'; }
         }
 
-        // Tab Switching
         function switchMatchTab(tab) {
             document.getElementById('tab-upcoming').classList.remove('active-tab');
             document.getElementById('tab-ongoing').classList.remove('active-tab');
@@ -983,7 +1027,6 @@
             document.getElementById('match-container-' + tab).style.display = 'block';
         }
 
-        // Modals
         function openJoinModal(mid, entry, category) {
             currentMatchId = mid; currentEntryFee = entry; currentMatchCategory = category;
             document.getElementById('join-uid').value = currentUserGameUid;
@@ -1027,8 +1070,8 @@
                         <div class="list-item" style="cursor:default; margin-bottom:8px; border-left: 3px solid ${r.rank == 1 ? 'gold' : (r.rank == 2 ? 'silver' : (r.rank == 3 ? '#cd7f32' : '#444'))}">
                             <div>
                                 <span style="font-weight:bold; color:${r.rank == 1 ? 'gold' : '#fff'};">Rank: #${r.rank}</span><br>
-                                <span style="font-size:13px;">${r.name}</span><br>
-                                <span style="font-size:10px; color:#888;">UID: ${r.gameUid}</span>
+                                <span style="font-size:13px;">${escapeHTML(r.name)}</span><br>
+                                <span style="font-size:10px; color:#888;">UID: ${escapeHTML(r.gameUid)}</span>
                             </div>
                             <div style="text-align:right;">
                                 <b style="color:var(--primary-color); display:block; margin-bottom:5px;">${r.kills} Kills</b>
@@ -1058,10 +1101,12 @@
             } else {
                 tCode = document.getElementById('join-team-code').value;
                 tName = document.getElementById('join-team-name').value;
-                if(!tCode || !tName) return alert("টিম কোড এবং টিমের নাম দিন");
+                if(!tCode || !tName) return showToast("টিম কোড এবং টিমের নাম দিন", "error");
             }
-            if(!gameUid) return alert("গেম UID দিন");
+            if(!gameUid) return showToast("গেম UID দিন", "error");
+            if(gameUid.length < 8 || gameUid.length > 12) return showToast("গেম UID অবশ্যই ৮-১২ সংখ্যার হতে হবে", "error");
 
+            // Prevent Double Clicks immediately
             toggleLoading('submit-join-btn', true, 'Submit');
 
             try {
@@ -1080,25 +1125,41 @@
                     }
                 });
 
-                if(alreadyJoined) { toggleLoading('submit-join-btn', false, 'Submit'); return alert("আপনি ইতিমধ্যে জয়েন করেছেন!"); }
+                if(alreadyJoined) { toggleLoading('submit-join-btn', false, 'Submit'); return showToast("আপনি ইতিমধ্যে জয়েন করেছেন!", "error"); }
                 
                 const maxPlayers = currentMatchCategory === "Duo" ? 2 : (currentMatchCategory === "Squad" ? 4 : 1);
-                if(teamCount >= maxPlayers) { toggleLoading('submit-join-btn', false, 'Submit'); return alert(`এই টিমে ${maxPlayers} জন পূর্ণ হয়ে গেছে`); }
+                if(teamCount >= maxPlayers) { toggleLoading('submit-join-btn', false, 'Submit'); return showToast(`এই টিমে ${maxPlayers} জন পূর্ণ হয়ে গেছে`, "error"); }
 
+                // Using secure transaction for balance deduction
                 if(isCreator) {
-                    const balSnap = await db.ref(`users/${uid}/balance`).once('value');
-                    const balance = balSnap.val() || 0;
-                    if(balance < currentEntryFee) { toggleLoading('submit-join-btn', false, 'Submit'); return alert("পর্যাপ্ত ব্যালেন্স নেই"); }
-                    await db.ref(`users/${uid}/balance`).set(balance - currentEntryFee);
+                    const balRef = db.ref(`users/${uid}/balance`);
+                    const txResult = await balRef.transaction((currentBalance) => {
+                        let bal = currentBalance || 0;
+                        if(bal >= currentEntryFee) {
+                            return bal - currentEntryFee;
+                        } else {
+                            return; // Abort transaction
+                        }
+                    });
+
+                    if(!txResult.committed) {
+                        toggleLoading('submit-join-btn', false, 'Submit');
+                        return showToast("পর্যাপ্ত ব্যালেন্স নেই বা ট্রানজেকশন ফেইল হয়েছে", "error");
+                    }
                 }
 
                 await db.ref(`match_joins/${currentMatchId}`).push({
-                    uid: uid, gameUid: gameUid, teamCode: tCode, teamName: tName, name: document.getElementById('u-name').innerText, isCreator: isCreator 
+                    uid: uid, 
+                    gameUid: escapeHTML(gameUid), 
+                    teamCode: escapeHTML(tCode), 
+                    teamName: escapeHTML(tName), 
+                    name: escapeHTML(document.getElementById('u-name').innerText), 
+                    isCreator: isCreator 
                 });
 
-                alert(isCreator ? "সফলভাবে জয়েন করেছেন! ফি কাটা হয়েছে।" : "টিমে জয়েন করেছেন! (মেম্বারদের ফি ফ্রি)");
+                showToast(isCreator ? "সফলভাবে জয়েন করেছেন! ফি কাটা হয়েছে।" : "টিমে জয়েন করেছেন! (মেম্বারদের ফি ফ্রি)", "success");
                 closeModal();
-            } catch(e) { alert(e.message); }
+            } catch(e) { showToast(e.message, "error"); }
             toggleLoading('submit-join-btn', false, 'Submit');
         }
 
@@ -1121,7 +1182,7 @@
             if(myTeamCode.startsWith("SOLO_")) {
                 listArea.innerHTML = `<h4>আপনার এন্ট্রি</h4>`;
             } else {
-                listArea.innerHTML = `<h4>টিম কোড: <span style="color:var(--accent-color)">${myTeamCode}</span></h4>`;
+                listArea.innerHTML = `<h4>টিম কোড: <span style="color:var(--accent-color)">${escapeHTML(myTeamCode)}</span></h4>`;
             }
             
             Object.entries(joins).forEach(([key, j]) => {
@@ -1135,8 +1196,8 @@
                     listArea.innerHTML += `
                         <div class="team-row">
                             <div>
-                                <span style="font-weight:bold;">${j.name}</span> ${roleTag}<br>
-                                <span style="font-size:11px; color:#888;">UID: ${j.gameUid}</span>
+                                <span style="font-weight:bold;">${escapeHTML(j.name)}</span> ${roleTag}<br>
+                                <span style="font-size:11px; color:#888;">UID: ${escapeHTML(j.gameUid)}</span>
                             </div>
                             ${actionBtn}
                         </div>`;
@@ -1156,57 +1217,114 @@
         async function submitMatchResult() {
             const kills = document.getElementById('res-kills').value;
             const rank = document.getElementById('res-rank').value;
-            if(!kills || !rank) return alert("কিল এবং পজিশন লিখুন");
+            if(!kills || !rank) return showToast("কিল এবং পজিশন লিখুন", "error");
+            
             toggleLoading('btn-submit-result', true, '<i class="fas fa-spinner fa-spin"></i> Submitting...');
             const uid = auth.currentUser.uid;
             try {
                 await db.ref(`match_results/${resultMatchId}/${uid}`).set({
                     name: document.getElementById('u-name').innerText,
-                    gameUid: currentUserGameUid, kills: kills, rank: rank, time: firebase.database.ServerValue.TIMESTAMP
+                    gameUid: currentUserGameUid, 
+                    kills: kills, 
+                    rank: rank, 
+                    time: firebase.database.ServerValue.TIMESTAMP
                 });
-                alert("রেজাল্ট ডাটাবেসে সফলভাবে জমা হয়েছে! দয়া করে এখন টেলিগ্রামে গিয়ে আপনার প্রমাণের স্ক্রিনশটটি দিন।");
+                showToast("রেজাল্ট ডাটাবেসে সফলভাবে জমা হয়েছে!", "success");
                 closeModal();
                 const tgLink = document.getElementById('tg-link').href;
                 if(tgLink && tgLink !== "#" && tgLink.includes("t.me")) window.open(tgLink, '_blank');
-                else alert("টেলিগ্রাম লিংক সেট করা নেই বা সঠিক নয়।");
-            } catch (error) { alert("সাবমিট করতে সমস্যা হয়েছে: " + error.message); }
-            toggleLoading('btn-submit-result', false, '<i class="fab fa-telegram"></i> Submit & Send Proof via Telegram');
+                else showToast("টেলিগ্রাম লিংক সেট করা নেই বা সঠিক নয়।", "error");
+            } catch (error) { showToast("সাবমিট করতে সমস্যা হয়েছে: " + error.message, "error"); }
+            toggleLoading('btn-submit-result', false, '<i class="fab fa-telegram"></i> Submit & Send Proof');
         }
 
-        function submitAddMoney() {
+        async function submitAddMoney() {
             const method = document.getElementById('am-method').value;
             const sender = document.getElementById('am-sender').value;
             const trx = document.getElementById('am-trx').value;
-            const amount = document.getElementById('am-amount').value;
-            if(!sender || !trx || !amount) return alert("তথ্য সঠিকভাবে পূরণ করুন");
+            const amountStr = document.getElementById('am-amount').value;
+            const amount = parseFloat(amountStr);
+
+            if(!sender || !trx || isNaN(amount)) return showToast("তথ্য সঠিকভাবে পূরণ করুন", "error");
+            
+            // Negative and Zero value validation
+            if(amount <= 0) return showToast("সঠিক টাকার পরিমাণ দিন", "error");
+
+            // Prevent Double Clicks immediately
             toggleLoading('btn-submit-add-money', true, 'Send Request');
-            db.ref('payment_requests/add_money').push({
-                uid: auth.currentUser.uid, name: document.getElementById('u-name').innerText, method: method, sender: sender, trxId: trx, amount: Number(amount), status: "Pending", time: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                alert("রিকোয়েস্ট পাঠানো হয়েছে।");
-                closeModal(); loadTransactionHistory(auth.currentUser.uid); toggleLoading('btn-submit-add-money', false, 'Send Request');
-            });
+            
+            try {
+                await db.ref('payment_requests/add_money').push({
+                    uid: auth.currentUser.uid, 
+                    name: document.getElementById('u-name').innerText, 
+                    method: method, 
+                    sender: escapeHTML(sender), 
+                    trxId: escapeHTML(trx), 
+                    amount: amount, 
+                    status: "Pending", 
+                    time: firebase.database.ServerValue.TIMESTAMP
+                });
+                showToast("রিকোয়েস্ট পাঠানো হয়েছে।", "success");
+                closeModal(); 
+                loadTransactionHistory(auth.currentUser.uid); 
+            } catch (e) {
+                showToast("Error: " + e.message, "error");
+            }
+            toggleLoading('btn-submit-add-money', false, 'Send Request');
         }
 
         async function submitWithdraw() {
             const method = document.getElementById('wd-method').value;
             const account = document.getElementById('wd-account').value;
             const amountStr = document.getElementById('wd-amount').value;
-            const amount = Number(amountStr);
-            if(!account || !amountStr) return alert("তথ্য সঠিকভাবে পূরণ করুন");
-            if(amount < 50) return alert("সর্বনিম্ন উইথড্র ৫০ টাকা");
+            const amount = parseFloat(amountStr);
+            
+            if(!account || isNaN(amount)) return showToast("তথ্য সঠিকভাবে পূরণ করুন", "error");
+            
+            // Negative, Zero, and Minimum amount validation
+            if(amount <= 0) return showToast("সঠিক এমাউন্ট দিন", "error");
+            if(amount < 50) return showToast("সর্বনিম্ন উইথড্র ৫০ টাকা", "error");
+            
+            // Prevent Double Clicks immediately
             toggleLoading('btn-submit-withdraw', true, 'Submit Request');
+            
             const uid = auth.currentUser.uid;
-            const balSnap = await db.ref(`users/${uid}/balance`).once('value');
-            const balance = balSnap.val() || 0;
-            if(balance < amount) { toggleLoading('btn-submit-withdraw', false, 'Submit Request'); return alert("পর্যাপ্ত ব্যালেন্স নেই"); }
-            await db.ref(`users/${uid}/balance`).set(balance - amount);
-            db.ref('payment_requests/withdraw').push({
-                uid: uid, name: document.getElementById('u-name').innerText, method: method, account: account, amount: amount, status: "Pending", time: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                alert("উইথড্র রিকোয়েস্ট পাঠানো হয়েছে।");
-                closeModal(); loadTransactionHistory(uid); toggleLoading('btn-submit-withdraw', false, 'Submit Request');
-            });
+            
+            try {
+                // Using secure transaction for withdrawing balance
+                const balRef = db.ref(`users/${uid}/balance`);
+                const txResult = await balRef.transaction((currentBalance) => {
+                    let bal = currentBalance || 0;
+                    if(bal >= amount) {
+                        return bal - amount;
+                    } else {
+                        return; // Abort transaction
+                    }
+                });
+
+                if(!txResult.committed) {
+                    toggleLoading('btn-submit-withdraw', false, 'Submit Request');
+                    return showToast("পর্যাপ্ত ব্যালেন্স নেই বা ট্রানজেকশন ফেইল হয়েছে", "error");
+                }
+                
+                await db.ref('payment_requests/withdraw').push({
+                    uid: uid, 
+                    name: document.getElementById('u-name').innerText, 
+                    method: method, 
+                    account: escapeHTML(account), 
+                    amount: amount, 
+                    status: "Pending", 
+                    time: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                showToast("উইথড্র রিকোয়েস্ট পাঠানো হয়েছে।", "success");
+                closeModal(); 
+                loadTransactionHistory(uid);
+            } catch (e) {
+                showToast("Error: " + e.message, "error");
+            }
+            
+            toggleLoading('btn-submit-withdraw', false, 'Submit Request');
         }
 
         function showPage(pageId, navEl) {
@@ -1222,18 +1340,15 @@
         function copyText(t) {
             if(!t || t === "Coming soon" || t === "...") return;
             navigator.clipboard.writeText(t);
-            alert("কপি হয়েছে: " + t);
+            showToast("কপি হয়েছে: " + t, "success");
         }
         
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                .then((registration) => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, (err) => {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
+                .then((registration) => { console.log('ServiceWorker registered'); })
+                .catch((err) => { console.log('ServiceWorker failed: ', err); });
             });
         }
     </script>
