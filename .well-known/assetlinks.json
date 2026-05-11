@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.gamer_hub_pro.twa",
+        "sha256_cert_fingerprints": ["26:EC:42:92:53:A9:D5:BA:77:CD:D2:18:01:88:C7:73:9B:2D:55:F4:83:E5:CB:DD:0A:0F:9A:DB:0B:9C:A0:B7"]
+      }
+    }]
