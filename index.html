@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamer's Hub Pro - Ultimate Tournament App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#ff4b2b">
+    <link rel="apple-touch-icon" href="./logo192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #ff4b2b;
+            --secondary-color: #ff416c;
+            --bg-color: #0b0b0b;
+            --card-bg: #1a1a1a;
+            --text-color: #ffffff;
+            --accent-color: #00d2ff;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --solo: #9b59b6;
+            --duo: #e67e22;
+            --squad: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* Loading & Auth */
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        #auth-page { padding: 30px; text-align: center; }
+        .auth-input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        
+        /* Password Hide/Show Wrapper */
+        .password-wrapper { position: relative; display: block; }
+        .password-toggle-icon { position: absolute; right: 15px; top: 25px; cursor: pointer; color: #888; font-size: 16px; }
+
+        header {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            padding: 15px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .container { padding: 15px; margin-bottom: 80px; }
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .active { display: block; }
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);} }
+
+        /* Match Card Styles */
+        .match-card { background: var(--card-bg); border-radius: 15px; margin-bottom: 20px; overflow: hidden; border: 1px solid #333; position: relative;}
+        .match-banner { width: 100%; height: 180px; object-fit: cover; }
+        .match-info { padding: 15px; }
+        .match-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 13px; color: #bbb; }
+        .match-meta span i { color: var(--primary-color); margin-right: 5px; }
+        
+        .cat-badge { position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: bold; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
+        .cat-Solo { background: var(--solo); }
+        .cat-Duo { background: var(--duo); }
+        .cat-Squad { background: var(--squad); }
+
+        /* Tabs */
+        .tab-btn { background: #222; border: 1px solid #444; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; margin-right: 5px; font-size: 12px; transition: 0.3s; white-space: nowrap;}
+        .tab-btn.active-tab { background: var(--primary-color); border-color: var(--primary-color); }
+
+        /* Buttons */
+        .btn { border: none; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; font-size: 15px; transition: opacity 0.3s; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-join { background: linear-gradient(to right, #ff416c, #ff4b2b); }
+        .btn-view { background: #3498db; }
+        .btn-success { background: var(--success); }
+        .btn-telegram { background: #0088cc; }
+        .btn-live { background: #e74c3c; animation: pulse 2s infinite; }
+        .btn-rules { background: transparent; border: 1px solid #888; color: #ddd; padding: 8px; font-size: 12px; margin-top: 5px; }
+        
+        .room-box { background: #000; border: 1px dashed var(--accent-color); padding: 10px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: #222; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #444; max-height: 90vh; overflow-y: auto;}
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; background: #111; display: flex;
+            justify-content: space-around; padding: 12px 0; border-top: 1px solid #333;
+        }
+        .nav-item { text-align: center; color: #777; font-size: 11px; flex: 1; }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
+        .nav-item.active-nav { color: var(--primary-color); }
+
+        /* Profile & Lists */
+        .profile-header { text-align: center; padding: 20px; background: #161616; border-radius: 15px; margin-bottom: 15px; border: 1px solid #333; position: relative;}
+        .edit-icon { position: absolute; top: 15px; right: 15px; color: var(--accent-color); cursor: pointer; font-size: 18px; }
+        .stat-box { display: flex; justify-content: space-between; text-align: center; background: #222; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; }
+        .stat-item h3 { margin: 0; font-size: 18px; }
+        .stat-item p { margin: 5px 0 0 0; font-size: 11px; color: #aaa; }
+
+        .list-item { background: #222; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: white; text-decoration: none; border: 1px solid #333;}
+        
+        /* Transaction Item */
+        .tx-item { background: #111; padding: 12px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-left: 4px solid #444;}
+        .tx-Pending { border-left-color: var(--warning); }
+        .tx-Success { border-left-color: var(--success); }
+        .tx-Rejected { border-left-color: var(--squad); }
+        
+        /* Notification Item */
+        .notif-item { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--accent-color); position: relative; }
+        .notif-time { position: absolute; top: 10px; right: 15px; font-size: 10px; color: #777; }
+
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 10px; overflow: hidden; background: #000; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        .team-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #333; font-size: 14px; align-items: center; }
+        select.auth-input { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        
+        hr.divider { border: 0; border-top: 1px solid #444; margin: 20px 0; }
+
+        /* Live Badge Animation */
+        .live-badge {
+            background: red;
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="loading-overlay">
+        <div style="text-align: center;">
+            <i class="fas fa-gamepad fa-3x fa-spin" style="color: var(--primary-color);"></i>
+            <p style="margin-top: 15px; font-weight: bold; color: white;">লোড হচ্ছে...</p>
+        </div>
+    </div>
+
+    <!-- Auth Page -->
+    <div id="auth-page" class="page">
+        <img src="https://cdn-icons-png.flaticon.com/512/808/808476.png" width="80" style="margin-bottom: 20px; margin-top: 50px;">
+        <h2 id="auth-title">লগইন করুন</h2>
+        <div id="register-fields" style="display: none;">
+            <input type="text" id="auth-name" class="auth-input" placeholder="আপনার নাম">
+            <input type="number" id="auth-phone" class="auth-input" placeholder="হোয়াটসঅ্যাপ নম্বর">
+            <input type="number" id="auth-game-uid" class="auth-input" placeholder="গেম UID (যেমন: 12345678)">
+            <input type="text" id="auth-refer" class="auth-input" placeholder="রেফার কোড (যদি থাকে - অপশনাল)">
+        </div>
+        
+        <input type="email" id="auth-email" class="auth-input" placeholder="ইমেইল">
+        
+        <div class="password-wrapper">
+            <input type="password" id="auth-pass" class="auth-input" placeholder="পাসওয়ার্ড">
+            <i class="fas fa-eye password-toggle-icon" id="toggle-pass-icon" onclick="togglePasswordVisibility('auth-pass', 'toggle-pass-icon')"></i>
+        </div>
+        
+        <button class="btn btn-join" id="btn-auth" onclick="handleAuth()">Login</button>
+        
+        <p onclick="forgotPassword()" id="forgot-pass-txt" style="margin-top: 15px; color: var(--accent-color); cursor: pointer; font-size: 14px; text-decoration: underline;">পাসওয়ার্ড ভুলে গেছেন?</p>
+        
+        <p onclick="toggleAuth()" id="toggle-txt" style="margin-top: 15px; color: #aaa; cursor: pointer;">নতুন অ্যাকাউন্ট তৈরি করুন</p>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-app" style="display: none;">
+        <header>
+            <div style="font-weight: 800; letter-spacing: 1px;">GAMER HUB PRO</div>
+            <div onclick="showPage('notif-page')" style="cursor:pointer; position:relative;">
+                <i class="fas fa-bell"></i>
+                <span id="notif-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:red; height:8px; width:8px; border-radius:50%;"></span>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Home -->
+            <div id="home" class="page active">
+                <div id="notice-text" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; border-left: 4px solid yellow;">লোড হচ্ছে...</div>
+                
+                <!-- Game Filter and Match Tabs -->
+                <div style="margin-bottom: 15px; display: flex; gap: 5px; align-items: center; justify-content: space-between; overflow-x: auto; padding-bottom: 5px;">
+                    <div style="display: flex; gap: 5px;">
+                        <button class="tab-btn active-tab" id="tab-upcoming" onclick="switchMatchTab('upcoming')">আসন্ন</button>
+                        <button class="tab-btn" id="tab-ongoing" onclick="switchMatchTab('ongoing')">চলমান</button>
+                        <button class="tab-btn" id="tab-completed" onclick="switchMatchTab('completed')">পূর্বের</button>
+                        <button class="tab-btn" id="tab-leaderboard" onclick="switchMatchTab('leaderboard'); loadLeaderboard();">লিডারবোর্ড</button>
+                    </div>
+                    
+                    <select id="game-filter" class="auth-input" style="width: auto; padding: 6px 10px; margin: 0; font-size: 12px; background: #222;" onchange="loadAppData(firebase.auth().currentUser.uid)">
+                        <option value="All">All</option>
+                        <option value="Free Fire">Free Fire</option>
+                        <option value="PUBG">PUBG</option>
+                    </select>
+                </div>
+
+                <div id="match-container-upcoming"></div>
+                <div id="match-container-ongoing" style="display: none;"></div>
+                <div id="match-container-completed" style="display: none;"></div>
+                <div id="match-container-leaderboard" style="display: none;"></div>
+            </div>
+
+            <!-- Watch -->
+            <div id="watch" class="page">
+                <h3 style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fas fa-play-circle" style="color: var(--primary-color);"></i> লাইভ টুর্নামেন্ট</span>
+                    <span class="live-badge"><i class="fas fa-circle"></i> LIVE</span>
+                </h3>
+
+                <!-- Video Player -->
+                <div class="video-wrapper" id="yt-player">
+                    <!-- Default text if no stream is added -->
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #111; color: #555;">
+                        বর্তমানে কোনো লাইভ চলছে না
+                    </div>
+                </div>
+
+                <!-- Live Match Details Box -->
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #333; border-left: 4px solid var(--primary-color);">
+                    <h4 style="margin: 0; color: white;">টুর্নামেন্ট গ্র্যান্ড ফাইনাল - Free Fire</h4>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #aaa;">
+                        <span><i class="fas fa-trophy" style="color: gold;"></i> প্রাইজ: ৳৫০০০</span>
+                        <span><i class="fas fa-users" style="color: var(--accent-color);"></i> ক্যাটাগরি: Squad</span>
+                    </div>
+                    <button class="btn btn-join" style="margin-top: 10px; padding: 8px; font-size: 13px;" onclick="window.open('https://youtube.com/c/YourChannel', '_blank')">
+                        <i class="fab fa-youtube"></i> চ্যানেল সাবস্ক্রাইব করুন
+                    </button>
+                </div>
+
+                <!-- Past Videos / Highlights Section -->
+                <h4 style="margin-top: 25px; border-bottom: 1px solid #333; padding-bottom: 8px;">পূর্বের টুর্নামেন্ট হাইলাইটস</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;" id="past-videos-list">
+                    <div style="background: #222; border-radius: 8px; overflow: hidden; border: 1px solid #444;" onclick="window.open('https://youtube.com/watch?v=VIDEO_ID_1', '_blank')">
+                        <img src="https://img.youtube.com/vi/VIDEO_ID_1/maxresdefault.jpg" onerror="this.src='https://via.placeholder.com/300x170?text=Match+1'" style="width: 100%; height: 90px; object-fit: cover;">
+                        <p style="font-size: 11px; padding: 8px; margin: 0; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Solo King Tournament Final</p>
+                    </div>
+                    <div style="background: #222; border-radius: 8px; overflow: hidden; border: 1px solid #444;" onclick="window.open('https://youtube.com/watch?v=VIDEO_ID_2', '_blank')">
+                        <img src="https://img.youtube.com/vi/VIDEO_ID_2/maxresdefault.jpg" onerror="this.src='https://via.placeholder.com/300x170?text=Match+2'" style="width: 100%; height: 90px; object-fit: cover;">
+                        <p style="font-size: 11px; padding: 8px; margin: 0; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Squad Battle Weekly</p>
+                    </div>
+                </div>
+                <div id="results-list" style="margin-top:20px"></div>
+            </div>
+
+            <!-- Wallet -->
+            <div id="wallet" class="page">
+                <div class="profile-header">
+                    <p style="color:#aaa; margin:0;">ব্যালেন্স</p>
+                    <h1 id="u-balance" style="color:var(--success); margin:10px 0;">৳ ০.০০</h1>
+                    <div style="display:flex; gap:10px">
+                        <button class="btn btn-join" onclick="document.getElementById('add-money-modal').style.display='flex'">Add Money</button>
+                        <button class="btn" style="background:#333" onclick="document.getElementById('withdraw-modal').style.display='flex'">Withdraw</button>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4>পেমেন্ট হিস্ট্রি</h4>
+                    <div id="tx-history">লোড হচ্ছে...</div>
+                </div>
+            </div>
+
+            <!-- Profile -->
+            <div id="profile" class="page">
+                <div class="profile-header">
+                    <i class="fas fa-cog edit-icon" onclick="openSettingsModal()"></i>
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" width="60" style="border-radius:50%; border:2px solid var(--accent-color);">
+                    <h2 id="u-name" style="margin: 10px 0 5px 0;">Loading...</h2>
+                    <p id="u-phone" style="color:#888; margin: 0; font-size: 13px;">01XXXXXXXXX</p>
+                    <p id="u-email" style="color:#aaa; margin: 5px 0 0 0; font-size: 13px;">loading...</p>
+                </div>
+                
+                <!-- Stats Box -->
+                <div class="stat-box">
+                    <div class="stat-item">
+                        <h3 id="stat-matches" style="color: var(--accent-color);">0</h3>
+                        <p>ম্যাচ প্লে</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="stat-kills" style="color: var(--primary-color);">0</h3>
+                        <p>মোট কিল</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="stat-won" style="color: var(--success);">৳0</h3>
+                        <p>মোট জয়</p>
+                    </div>
+                </div>
+                
+                <div class="list-item" onclick="copyText(document.getElementById('u-game-uid-text').innerText)">
+                    <span><i class="fas fa-id-card"></i> গেম UID: <b id="u-game-uid-text" style="color: var(--accent-color);">...</b></span>
+                    <i class="fas fa-copy"></i>
+                </div>
+                
+                <div class="list-item" onclick="copyText(document.getElementById('u-refer-text').innerText)">
+                    <span><i class="fas fa-gift"></i> রেফার কোড: <b id="u-refer-text">...</b></span>
+                    <i class="fas fa-copy"></i>
+                </div>
+
+                <a id="wa-link" href="#" class="list-item"><span><i class="fab fa-whatsapp"></i> হোয়াটসঅ্যাপ সাপোর্ট</span></a>
+                <a id="tg-link" href="#" class="list-item"><span><i class="fab fa-telegram"></i> টেলিগ্রাম গ্রুপ</span></a>
+                <button class="btn" style="background:#e74c3c; margin-top:10px" onclick="firebase.auth().signOut()">লগ আউট</button>
+            </div>
+            
+            <!-- Notif -->
+            <div id="notif-page" class="page">
+                <h3>নোটিফিকেশন</h3>
+                <div id="notif-list">লোড হচ্ছে...</div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active-nav" id="nav-home" onclick="showPage('home', this)"><i class="fas fa-gamepad"></i>প্লে</div>
+            <div class="nav-item" id="nav-watch" onclick="showPage('watch', this)"><i class="fas fa-play"></i>ওয়াচ</div>
+            <div class="nav-item" id="nav-wallet" onclick="showPage('wallet', this)"><i class="fas fa-wallet"></i>ওয়ালেট</div>
+            <div class="nav-item" id="nav-profile" onclick="showPage('profile', this)"><i class="fas fa-user"></i>প্রোফাইল</div>
+        </nav>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Settings / Edit Profile Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: var(--accent-color);"><i class="fas fa-user-edit"></i> প্রোফাইল এডিট</h3>
+            
+            <label style="font-size:12px; color:#aaa;">নাম</label>
+            <input type="text" id="edit-name" class="auth-input">
+            
+            <label style="font-size:12px; color:#aaa;">গেম UID</label>
+            <input type="number" id="edit-uid" class="auth-input">
+            
+            <label style="font-size:12px; color:#aaa;">ফোন নম্বর</label>
+            <input type="number" id="edit-phone" class="auth-input">
+            
+            <button class="btn btn-join" id="btn-update-profile" onclick="updateProfile()">Update Profile</button>
+            
+            <hr class="divider">
+            
+            <h4 style="margin:0 0 10px 0; color: #ff416c;"><i class="fas fa-lock"></i> পাসওয়ার্ড পরিবর্তন</h4>
+            
+            <div class="password-wrapper">
+                <input type="password" id="edit-old-pass" class="auth-input" placeholder="পুরাতন পাসওয়ার্ড">
+                <i class="fas fa-eye password-toggle-icon" id="toggle-old-pass" onclick="togglePasswordVisibility('edit-old-pass', 'toggle-old-pass')"></i>
+            </div>
+            <div class="password-wrapper">
+                <input type="password" id="edit-new-pass" class="auth-input" placeholder="নতুন পাসওয়ার্ড">
+                <i class="fas fa-eye password-toggle-icon" id="toggle-new-pass" onclick="togglePasswordVisibility('edit-new-pass', 'toggle-new-pass')"></i>
+            </div>
+            
+            <button class="btn" style="background:#3498db;" id="btn-change-pass" onclick="changePassword()">Change Password</button>
+            
+            <button class="btn" style="background:#444; margin-top:15px;" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Join Modal -->
+    <div id="join-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0" id="join-modal-title">টিমে জয়েন করুন</h3>
+            <input type="number" id="join-uid" class="auth-input" placeholder="গেম UID (যেমন: 1234567)">
+            
+            <div id="team-inputs">
+                <input type="text" id="join-team-code" class="auth-input" placeholder="টিম কোড দিন (যেমন: TEAM1)">
+                <input type="text" id="join-team-name" class="auth-input" placeholder="টিমের নাম">
+                <p style="font-size: 11px; color: #ff416c; margin-bottom: 10px;">* প্রথম জয়েনকারীর একাউন্ট থেকে টিমের ফি কাটা হবে। মেম্বারদের ফি লাগবে না।</p>
+            </div>
+            
+            <button class="btn btn-join" id="submit-join-btn" onclick="submitJoin()">Submit</button>
+            <button class="btn" style="background:#444" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Rules Modal -->
+    <div id="rules-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: var(--accent-color);">ম্যাচের নিয়মাবলি</h3>
+            <div id="rules-text" style="font-size: 13px; line-height: 1.6; color: #ccc; margin-bottom: 15px;"></div>
+            <button class="btn" style="background:#444" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- View Team Modal -->
+    <div id="view-team-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0">টিম মেম্বারস</h3>
+            <div id="team-members-list"></div>
+            <button class="btn" style="background:#444; margin-top:20px" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- View Results Modal -->
+    <div id="view-results-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: var(--accent-color);"><i class="fas fa-trophy"></i> ম্যাচের ফলাফল</h3>
+            <div id="results-data-list">লোড হচ্ছে...</div>
+            <button class="btn" style="background:#444; margin-top:20px" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Submit Result Modal -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: var(--accent-color);">রেজাল্ট জমা দিন</h3>
+            <input type="number" id="res-kills" class="auth-input" placeholder="আপনার টিমের মোট কিল (Total Kills)">
+            <input type="number" id="res-rank" class="auth-input" placeholder="ম্যাচে পজিশন (যেমন: 1, 2, 3)">
+            
+            <p style="font-size: 12px; color: #aaa; margin-top: 10px; margin-bottom: 15px;">* রেজাল্ট সাবমিট করার পর আমাদের টেলিগ্রামে প্রমাণের স্ক্রিনশট জমা দিন। এডমিন চেক করে আপনার ওয়ালেটে প্রাইজ এড করে দিবে।</p>
+            
+            <button class="btn btn-telegram" id="btn-submit-result" onclick="submitMatchResult()"><i class="fab fa-telegram"></i> Submit & Send Proof via Telegram</button>
+            <button class="btn" style="background:#444" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Add Money Modal -->
+    <div id="add-money-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: var(--success);">Add Money</h3>
+            <div style="background: #111; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px; border: 1px solid #333;">
+                <p style="margin:5px 0; color:#aaa;">নিচের যেকোনো নাম্বারে সেন্ড মানি করুন:</p>
+                <p style="margin:5px 0;"><b>bKash:</b> <span id="admin-bkash">লোড হচ্ছে...</span></p>
+                <p style="margin:5px 0;"><b>Nagad:</b> <span id="admin-nagad">লোড হচ্ছে...</span></p>
+            </div>
+            
+            <select id="am-method" class="auth-input">
+                <option value="bKash">bKash</option>
+                <option value="Nagad">Nagad</option>
+            </select>
+            <input type="number" id="am-sender" class="auth-input" placeholder="যে নাম্বার থেকে টাকা পাঠিয়েছেন">
+            <input type="text" id="am-trx" class="auth-input" placeholder="TrxID (ট্রানজেকশন আইডি)">
+            <input type="number" id="am-amount" class="auth-input" placeholder="টাকার পরিমাণ (৳)">
+            
+            <button class="btn btn-join" id="btn-submit-add-money" onclick="submitAddMoney()">Send Request</button>
+            <button class="btn" style="background:#444" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div id="withdraw-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: #e74c3c;">Withdraw Money</h3>
+            <select id="wd-method" class="auth-input">
+                <option value="bKash">bKash</option>
+                <option value="Nagad">Nagad</option>
+            </select>
+            <input type="number" id="wd-account" class="auth-input" placeholder="আপনার একাউন্ট নাম্বার">
+            <input type="number" id="wd-amount" class="auth-input" placeholder="উইথড্র পরিমাণ (৳)">
+            
+            <button class="btn btn-join" id="btn-submit-withdraw" onclick="submitWithdraw()">Submit Request</button>
+            <button class="btn" style="background:#444" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmnF7dfDcol4p26bUoyJN8i0cxoNdvXy8",
+            authDomain: "gamer-hub-pro.firebaseapp.com",
+            databaseURL: "https://gamer-hub-pro-default-rtdb.firebaseio.com",
+            projectId: "gamer-hub-pro",
+            storageBucket: "gamer-hub-pro.firebasestorage.app",
+            messagingSenderId: "316118909541",
+            appId: "1:316118909541:android:7f85657121608ac7f0bc8c"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        let isLogin = true;
+        let currentMatchId = "";
+        let currentEntryFee = 0;
+        let currentMatchCategory = "Squad"; 
+        let resultMatchId = ""; 
+        let currentUserGameUid = ""; 
+        let userFullData = {};
+
+        function toggleLoading(btnId, isLoading, defaultText) {
+            const btn = document.getElementById(btnId);
+            if (isLoading) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = defaultText;
+            }
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('auth-title').innerText = isLogin ? 'লগইন করুন' : 'রেজিস্ট্রেশন করুন';
+            document.getElementById('register-fields').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('forgot-pass-txt').style.display = isLogin ? 'block' : 'none';
+            document.getElementById('btn-auth').innerText = isLogin ? 'Login' : 'Register';
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            if(!email || !pass) return alert("ইমেইল ও পাসওয়ার্ড দিন");
+            
+            toggleLoading('btn-auth', true, isLogin ? 'Login' : 'Register');
+
+            try {
+                if(isLogin) {
+                    await auth.signInWithEmailAndPassword(email, pass);
+                } else {
+                    const name = document.getElementById('auth-name').value;
+                    const phone = document.getElementById('auth-phone').value;
+                    const gameUid = document.getElementById('auth-game-uid').value; 
+                    const referCode = document.getElementById('auth-refer').value || ""; 
+                    
+                    if(!name || !phone || !gameUid) {
+                        toggleLoading('btn-auth', false, 'Register');
+                        return alert("নাম, ফোন নাম্বার এবং গেম UID দিন");
+                    }
+                    
+                    const res = await auth.createUserWithEmailAndPassword(email, pass);
+                    await db.ref('users/' + res.user.uid).set({
+                        name: name, 
+                        phone: phone, 
+                        gameUid: gameUid, 
+                        balance: 0,
+                        totalKills: 0, 
+                        totalWon: 0,   
+                        usedReferCode: referCode,
+                        referCode: "GHP" + Math.floor(1000 + Math.random() * 8999),
+                        joinedAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+            } catch(e) { 
+                alert(e.message); 
+            }
+            toggleLoading('btn-auth', false, isLogin ? 'Login' : 'Register');
+        }
+
+        async function forgotPassword() {
+            const email = document.getElementById('auth-email').value;
+            if(!email) return alert("পাসওয়ার্ড রিসেট করতে প্রথমে বক্সে আপনার ইমেইলটি লিখুন, তারপর আবার এই লেখায় ক্লিক করুন।");
+            try {
+                await auth.sendPasswordResetEmail(email);
+                alert("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে।");
+            } catch(e) { alert(e.message); }
+        }
+
+        auth.onAuthStateChanged(user => {
+            document.getElementById('loader').style.display = 'none';
+            if(user) {
+                document.getElementById('auth-page').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                
+                document.getElementById('u-email').innerText = user.email || 'No Email';
+                
+                loadAppData(user.uid);
+                loadTransactionHistory(user.uid); 
+                loadNotifications();
+                loadUserStats(user.uid);
+            } else {
+                document.getElementById('auth-page').style.display = 'block';
+                document.getElementById('main-app').style.display = 'none';
+            }
+        });
+
+        function loadAppData(uid) {
+            db.ref('settings/notice').on('value', s => document.getElementById('notice-text').innerText = s.val() || 'Welcome to Gamer Hub Pro');
+            db.ref('settings/whatsapp').on('value', s => document.getElementById('wa-link').href = "https://wa.me/" + s.val());
+            db.ref('settings/telegram').on('value', s => document.getElementById('tg-link').href = s.val());
+            db.ref('settings/yt_stream').on('value', s => {
+                if(s.val()) document.getElementById('yt-player').innerHTML = `<iframe src="${s.val()}" allowfullscreen></iframe>`;
+            });
+            
+            db.ref('settings/bkash').on('value', s => {
+                const b = s.val();
+                document.getElementById('admin-bkash').innerText = b ? b + " (Personal)" : "Not Set";
+            });
+            db.ref('settings/nagad').on('value', s => {
+                const n = s.val();
+                document.getElementById('admin-nagad').innerText = n ? n + " (Personal)" : "Not Set";
+            });
+
+            db.ref('users/' + uid).on('value', s => {
+                userFullData = s.val();
+                if(userFullData) {
+                    document.getElementById('u-name').innerText = userFullData.name;
+                    document.getElementById('u-phone').innerText = userFullData.phone;
+                    document.getElementById('u-balance').innerText = "৳ " + (userFullData.balance || 0);
+                    document.getElementById('u-refer-text').innerText = userFullData.referCode;
+                    
+                    currentUserGameUid = userFullData.gameUid || "";
+                    document.getElementById('u-game-uid-text').innerText = currentUserGameUid;
+                }
+            });
+
+            // Load Matches
+            db.ref('tournaments').on('value', snap => {
+                const upContainer = document.getElementById('match-container-upcoming');
+                const onContainer = document.getElementById('match-container-ongoing');
+                const compContainer = document.getElementById('match-container-completed');
+                const filterGameVal = document.getElementById('game-filter').value;
+                
+                db.ref('match_joins').on('value', joinSnap => {
+                    const allJoins = joinSnap.val() || {};
+                    upContainer.innerHTML = ""; 
+                    onContainer.innerHTML = "";
+                    compContainer.innerHTML = ""; 
+
+                    let ongoingCount = 0;
+
+                    snap.forEach(child => {
+                        const m = child.val();
+                        const mid = child.key;
+                        const status = m.status || 'upcoming'; // upcoming, ongoing, completed, cancelled
+                        const category = m.category || 'Squad'; 
+                        const rules = m.rules || 'কোনো নির্দিষ্ট নিয়মাবলি দেওয়া হয়নি। হ্যাক ব্যবহার সম্পূর্ণ নিষিদ্ধ।';
+                        
+                        if (filterGameVal !== 'All') {
+                            const dbGameName = m.gameName || 'Free Fire'; 
+                            if (dbGameName !== filterGameVal && !(m.title && m.title.includes(filterGameVal))) {
+                                return; 
+                            }
+                        }
+                        
+                        let userJoined = false;
+                        let uniqueTeams = new Set();
+                        
+                        if(allJoins[mid]) {
+                            Object.values(allJoins[mid]).forEach(j => {
+                                if(j.uid === uid) userJoined = true;
+                                uniqueTeams.add(j.teamCode); 
+                            });
+                        }
+                        
+                        const currentTeamCount = uniqueTeams.size;
+                        const defaultMax = category === 'Solo' ? 48 : (category === 'Duo' ? 24 : 12);
+                        const maxTeams = m.maxTeams || defaultMax;
+                        const minTeams = m.minTeams || Math.floor(maxTeams * 0.8);
+                        
+                        const neededForMin = minTeams - currentTeamCount;
+                        const isMinMet = currentTeamCount >= minTeams;
+                        const isFull = currentTeamCount >= maxTeams;
+                        
+                        let progressPercent = (currentTeamCount / maxTeams) * 100;
+                        if(progressPercent > 100) progressPercent = 100;
+
+                        let actionBtn = "";
+                        let statusBadge = "";
+
+                        // Handle UI based on STATUS
+                        if(status === 'cancelled') {
+                            actionBtn = `<button class="btn" style="background:#555; cursor:not-allowed;" disabled>ম্যাচ ক্যানসেলড (ফি রিফান্ডেড)</button>`;
+                        } else if(status === 'completed') {
+                            actionBtn = `<button class="btn btn-view" onclick="openViewResultsModal('${mid}')">View Results</button>`;
+                        } else if (status === 'ongoing') {
+                            // NEW: ONGOING/LIVE STATUS UI
+                            ongoingCount++;
+                            statusBadge = `<span class="live-badge" style="position: absolute; top: 10px; left: 10px;"><i class="fas fa-circle"></i> LIVE</span>`;
+                            actionBtn = `
+                                <div style="display:flex; gap:10px; margin-top:10px;">
+                                    <button class="btn btn-live" style="margin-top:0;" onclick="goToWatchTab()"><i class="fas fa-play"></i> Watch Live Stream</button>
+                                    ${userJoined ? `<button class="btn btn-success" style="margin-top:0;" onclick="openResultModal('${mid}')">Submit Result</button>` : ''}
+                                </div>`;
+                        } else {
+                            // UPCOMING STATUS UI
+                            if(userJoined) {
+                                actionBtn = `<div style="display:flex; gap:10px; margin-top:10px;">
+                                     <button class="btn btn-view" style="margin-top:0;" onclick="viewTeam('${mid}')">View ${category === 'Solo'?'Entry':'Team'}</button>
+                                     <button class="btn btn-success" style="margin-top:0;" onclick="openResultModal('${mid}')">Submit Result</button>
+                                   </div>`;
+                            } else if(isFull) {
+                                actionBtn = `<button class="btn" style="background:#555; cursor:not-allowed;" disabled>স্লট ফুল</button>`;
+                            } else {
+                                actionBtn = `<button class="btn btn-join" onclick="openJoinModal('${mid}', ${m.entry}, '${category}')">Join Match</button>`;
+                            }
+                        }
+
+                        const roomBoxContent = userJoined 
+                            ? `<span style="font-size:12px">ID: ${m.roomID || 'Coming soon'}</span>
+                               <i class="fas fa-copy" style="cursor:pointer;" onclick="copyText('${m.roomID}')"></i>`
+                            : `<span style="font-size:12px; color: #ff416c;"><i class="fas fa-lock"></i> জয়েন করলে রুম আইডি দেখতে পাবেন</span>`;
+
+                        // Progress Bar (Only show if upcoming)
+                        let teamStatsHtml = "";
+                        if (status === 'upcoming') {
+                            teamStatsHtml = `
+                                <div style="background: #111; padding: 10px; border-radius: 8px; margin-top: 15px; border: 1px solid #333; font-size: 12px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span><i class="fas fa-users"></i> টিম জয়েন: <b style="color:var(--accent-color);">${currentTeamCount}/${maxTeams}</b></span>
+                                        <span style="color: ${isMinMet ? 'var(--success)' : 'var(--warning)'}; font-weight:bold;">
+                                            ${isMinMet ? 'ম্যাচ শুরু হবে' : 'মিনিমাম দরকার: ' + minTeams}
+                                        </span>
+                                    </div>
+                                    <div style="background: #222; border-radius: 5px; height: 8px; overflow: hidden; margin-bottom: 8px; border:1px solid #444;">
+                                        <div style="background: linear-gradient(to right, #ff416c, var(--accent-color)); width: ${progressPercent}%; height: 100%; transition: width 0.5s;"></div>
+                                    </div>
+                            `;
+
+                            if(!isMinMet) {
+                                teamStatsHtml += `<p style="margin: 0; color: #aaa; font-size: 11px;">
+                                    <i class="fas fa-exclamation-triangle" style="color: var(--warning)"></i>
+                                    আরও <b>${neededForMin}</b> টি টিম দরকার। টার্গেট পূরণ না হলে ম্যাচ ক্যানসেল করে ব্যালেন্স রিফান্ড করা হবে।
+                                </p>`;
+                            } else if(!isFull) {
+                                teamStatsHtml += `<p style="margin: 0; color: var(--success); font-size: 11px;">
+                                    <i class="fas fa-check-circle"></i> টার্গেট পূরণ হয়েছে! আরও ${maxTeams - currentTeamCount} টি টিম জয়েন করতে পারবে।
+                                </p>`;
+                            } else {
+                                teamStatsHtml += `<p style="margin: 0; color: #e74c3c; font-size: 11px;">
+                                    <i class="fas fa-ban"></i> স্লট ফুল হয়ে গেছে! আর কোনো টিম জয়েন করতে পারবে না।
+                                </p>`;
+                            }
+                            teamStatsHtml += `</div>`;
+                        }
+
+                        const matchCardHTML = `
+                            <div class="match-card">
+                                ${statusBadge}
+                                <span class="cat-badge cat-${category}">${category}</span>
+                                <img src="${m.image || 'https://via.placeholder.com/400x180?text=Match+Banner'}" class="match-banner">
+                                <div class="match-info">
+                                    <h3 style="margin: 0;">${m.title}</h3>
+                                    <div class="match-meta">
+                                        <span><i class="fas fa-clock"></i> ${m.time}</span>
+                                        <span><i class="fas fa-map"></i> ${m.map}</span>
+                                        <span><i class="fas fa-money-bill-wave"></i> এন্ট্রি: ${m.entry}৳</span>
+                                        <span><i class="fas fa-trophy"></i> প্রাইজ: ${m.prize}৳</span>
+                                    </div>
+                                    
+                                    ${teamStatsHtml}
+                                    
+                                    <button class="btn btn-rules" onclick="openRulesModal('${encodeURIComponent(rules)}')"><i class="fas fa-info-circle"></i> নিয়মাবলি দেখুন</button>
+                                    
+                                    ${status === 'upcoming' ? `<div class="room-box">${roomBoxContent}</div>` : ''}
+                                    ${actionBtn}
+                                </div>
+                            </div>`;
+
+                        if (status === 'upcoming') upContainer.innerHTML += matchCardHTML;
+                        else if (status === 'ongoing') onContainer.innerHTML += matchCardHTML;
+                        else compContainer.innerHTML += matchCardHTML;
+                    });
+
+                    // Show empty message if no ongoing matches
+                    if(ongoingCount === 0) {
+                        onContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#777;"><i class="fas fa-video-slash fa-3x"></i><p>বর্তমানে কোনো ম্যাচ লাইভ চলছে না</p></div>';
+                    }
+                });
+            });
+        }
+
+        // Helper to jump to Watch Tab from a Live Match
+        function goToWatchTab() {
+            showPage('watch', document.getElementById('nav-watch'));
+        }
+
+        // Leaderboard
+        async function loadLeaderboard() {
+            const container = document.getElementById('match-container-leaderboard');
+            container.innerHTML = '<div style="text-align:center; margin-top:20px; color:#aaa;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>লোড হচ্ছে...</div>';
+            try {
+                const snap = await db.ref('users').once('value');
+                let users = [];
+                snap.forEach(child => {
+                    let u = child.val();
+                    if(u.totalKills && u.totalKills > 0) {
+                        users.push({name: u.name, kills: u.totalKills, uid: u.gameUid, won: u.totalWon || 0});
+                    }
+                });
+                
+                users.sort((a,b) => b.kills - a.kills); 
+                
+                container.innerHTML = '<h3 style="color:var(--accent-color); margin-bottom:15px;"><i class="fas fa-medal"></i> টপ কিলার্স লিডারবোর্ড</h3>';
+                
+                if(users.length === 0) {
+                    container.innerHTML += '<p style="text-align:center; color:#777;">এখনও কোনো ডেটা নেই</p>';
+                    return;
+                }
+
+                users.slice(0, 10).forEach((u, index) => {
+                    let medalIcon = '';
+                    if(index === 0) medalIcon = '<i class="fas fa-trophy" style="color:gold;"></i>';
+                    else if(index === 1) medalIcon = '<i class="fas fa-medal" style="color:silver;"></i>';
+                    else if(index === 2) medalIcon = '<i class="fas fa-medal" style="color:#cd7f32;"></i>';
+
+                    container.innerHTML += `
+                        <div class="list-item" style="cursor:default; align-items:center;">
+                            <div>
+                                <span style="font-size:16px; font-weight:bold; margin-right:8px; color:#aaa;">#${index+1}</span>
+                                <span style="font-weight:bold;">${u.name}</span> ${medalIcon}<br>
+                                <span style="font-size:11px; color:#888;">UID: ${u.uid}</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <span style="color:var(--primary-color); font-weight:bold; display:block;">${u.kills} Kills</span>
+                                <span style="color:var(--success); font-size:11px;">Earnings: ৳${u.won}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) { container.innerHTML = '<p style="color:red;">Error loading leaderboard.</p>'; }
+        }
+
+        // Load Notifications
+        function loadNotifications() {
+            db.ref('notifications').orderByChild('time').limitToLast(20).on('value', snap => {
+                const notifContainer = document.getElementById('notif-list');
+                const badge = document.getElementById('notif-badge');
+                
+                if(!snap.exists()) {
+                    notifContainer.innerHTML = '<p style="text-align:center; color:#777; margin-top:20px;">কোনো নোটিফিকেশন নেই</p>';
+                    badge.style.display = 'none';
+                    return;
+                }
+                
+                badge.style.display = 'block';
+                
+                let notifs = [];
+                snap.forEach(child => { notifs.push(child.val()); });
+                notifs.reverse(); 
+
+                notifContainer.innerHTML = '';
+                notifs.forEach(n => {
+                    const date = new Date(n.time).toLocaleString('en-GB');
+                    notifContainer.innerHTML += `
+                        <div class="notif-item">
+                            <h4 style="margin: 0 0 5px 0;">${n.title}</h4>
+                            <p style="margin: 0; font-size: 13px; color: #ccc;">${n.body}</p>
+                            <span class="notif-time">${date}</span>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // Stats
+        async function loadUserStats(uid) {
+            try {
+                const joinsSnap = await db.ref('match_joins').once('value');
+                let matchCount = 0;
+                joinsSnap.forEach(match => {
+                    if(match.val()) {
+                        Object.values(match.val()).forEach(j => {
+                            if(j.uid === uid) matchCount++;
+                        });
+                    }
+                });
+                document.getElementById('stat-matches').innerText = matchCount;
+
+                db.ref(`users/${uid}`).on('value', s => {
+                    const data = s.val();
+                    document.getElementById('stat-kills').innerText = data.totalKills || 0;
+                    document.getElementById('stat-won').innerText = "৳" + (data.totalWon || 0);
+                });
+            } catch(e) { console.log(e); }
+        }
+
+        // Profile
+        function openSettingsModal() {
+            document.getElementById('edit-name').value = userFullData.name || '';
+            document.getElementById('edit-uid').value = userFullData.gameUid || '';
+            document.getElementById('edit-phone').value = userFullData.phone || '';
+            document.getElementById('edit-old-pass').value = '';
+            document.getElementById('edit-new-pass').value = '';
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        async function updateProfile() {
+            const newName = document.getElementById('edit-name').value;
+            const newUid = document.getElementById('edit-uid').value;
+            const newPhone = document.getElementById('edit-phone').value;
+            if(!newName || !newUid || !newPhone) return alert("তথ্য অসম্পূর্ণ");
+            
+            toggleLoading('btn-update-profile', true, 'Update Profile');
+            try {
+                await db.ref(`users/${auth.currentUser.uid}`).update({
+                    name: newName, gameUid: newUid, phone: newPhone
+                });
+                alert("প্রোফাইল আপডেট হয়েছে!");
+            } catch(e) { alert(e.message); }
+            toggleLoading('btn-update-profile', false, 'Update Profile');
+        }
+
+        async function changePassword() {
+            const oldPass = document.getElementById('edit-old-pass').value;
+            const newPass = document.getElementById('edit-new-pass').value;
+            if(!oldPass || !newPass) return alert("পাসওয়ার্ড দিন");
+            if(newPass.length < 6) return alert("নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে");
+            
+            toggleLoading('btn-change-pass', true, 'Change Password');
+            try {
+                const user = auth.currentUser;
+                const credential = firebase.auth.EmailAuthProvider.credential(user.email, oldPass);
+                await user.reauthenticateWithCredential(credential);
+                await user.updatePassword(newPass);
+                alert("পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!");
+                document.getElementById('edit-old-pass').value = '';
+                document.getElementById('edit-new-pass').value = '';
+            } catch(e) {
+                if(e.code === 'auth/wrong-password') alert("পুরাতন পাসওয়ার্ড ভুল হয়েছে");
+                else alert(e.message);
+            }
+            toggleLoading('btn-change-pass', false, 'Change Password');
+        }
+
+        // Transactions
+        async function loadTransactionHistory(uid) {
+            const txContainer = document.getElementById('tx-history');
+            try {
+                let transactions = [];
+                const addSnap = await db.ref('payment_requests/add_money').orderByChild('uid').equalTo(uid).once('value');
+                addSnap.forEach(c => { transactions.push({...c.val(), type: 'Add Money'}) });
+                
+                const wdSnap = await db.ref('payment_requests/withdraw').orderByChild('uid').equalTo(uid).once('value');
+                wdSnap.forEach(c => { transactions.push({...c.val(), type: 'Withdraw'}) });
+
+                if(transactions.length === 0) {
+                    txContainer.innerHTML = '<p style="color:#777; font-size:12px;">কোনো ট্রানজেকশন পাওয়া যায়নি।</p>';
+                    return;
+                }
+                transactions.sort((a, b) => b.time - a.time);
+                txContainer.innerHTML = "";
+                transactions.forEach(t => {
+                    const date = new Date(t.time).toLocaleDateString('en-GB');
+                    txContainer.innerHTML += `
+                        <div class="tx-item tx-${t.status}">
+                            <div>
+                                <b style="color:${t.type === 'Add Money' ? 'var(--success)' : '#e74c3c'}">${t.type}</b><br>
+                                <span style="font-size:11px; color:#888;">${date} • ${t.method}</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <b>৳${t.amount}</b><br>
+                                <span style="font-size:11px; color:#ccc;">${t.status}</span>
+                            </div>
+                        </div>`;
+                });
+            } catch(e) { txContainer.innerHTML = '<p style="color:red; font-size:12px;">হিস্ট্রি লোড করতে সমস্যা হয়েছে।</p>'; }
+        }
+
+        // Tab Switching
+        function switchMatchTab(tab) {
+            document.getElementById('tab-upcoming').classList.remove('active-tab');
+            document.getElementById('tab-ongoing').classList.remove('active-tab');
+            document.getElementById('tab-completed').classList.remove('active-tab');
+            document.getElementById('tab-leaderboard').classList.remove('active-tab');
+            
+            document.getElementById('match-container-upcoming').style.display = 'none';
+            document.getElementById('match-container-ongoing').style.display = 'none';
+            document.getElementById('match-container-completed').style.display = 'none';
+            document.getElementById('match-container-leaderboard').style.display = 'none';
+
+            document.getElementById('tab-' + tab).classList.add('active-tab');
+            document.getElementById('match-container-' + tab).style.display = 'block';
+        }
+
+        // Modals
+        function openJoinModal(mid, entry, category) {
+            currentMatchId = mid; currentEntryFee = entry; currentMatchCategory = category;
+            document.getElementById('join-uid').value = currentUserGameUid;
+            if(category === "Solo") {
+                document.getElementById('join-modal-title').innerText = "ম্যাচে জয়েন করুন (Solo)";
+                document.getElementById('team-inputs').style.display = "none";
+            } else {
+                document.getElementById('join-modal-title').innerText = `টিমে জয়েন করুন (${category})`;
+                document.getElementById('team-inputs').style.display = "block";
+            }
+            document.getElementById('join-modal').style.display = 'flex';
+        }
+
+        function openRulesModal(rulesEncoded) {
+            document.getElementById('rules-text').innerText = decodeURIComponent(rulesEncoded);
+            document.getElementById('rules-modal').style.display = 'flex';
+        }
+
+        function openResultModal(mid) {
+            resultMatchId = mid;
+            document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        async function openViewResultsModal(mid) {
+            document.getElementById('view-results-modal').style.display = 'flex';
+            const container = document.getElementById('results-data-list');
+            container.innerHTML = '<div style="text-align:center; color:#aaa;"><i class="fas fa-spinner fa-spin"></i> ডেটা লোড হচ্ছে...</div>';
+            try {
+                const snap = await db.ref(`match_results/${mid}`).once('value');
+                let results = [];
+                snap.forEach(c => results.push(c.val()));
+                if(results.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#777; font-size:13px; margin-top:20px;">এখনও রেজাল্ট পাবলিশ হয়নি বা কেউ সাবমিট করেনি।</p>';
+                    return;
+                }
+                results.sort((a, b) => parseInt(a.rank) - parseInt(b.rank));
+                container.innerHTML = '';
+                results.forEach(r => {
+                    let screenshotBtn = `<span style="font-size:11px; color:var(--accent-color);"><i class="fab fa-telegram"></i> Check Telegram</span>`;
+                    container.innerHTML += `
+                        <div class="list-item" style="cursor:default; margin-bottom:8px; border-left: 3px solid ${r.rank == 1 ? 'gold' : (r.rank == 2 ? 'silver' : (r.rank == 3 ? '#cd7f32' : '#444'))}">
+                            <div>
+                                <span style="font-weight:bold; color:${r.rank == 1 ? 'gold' : '#fff'};">Rank: #${r.rank}</span><br>
+                                <span style="font-size:13px;">${r.name}</span><br>
+                                <span style="font-size:10px; color:#888;">UID: ${r.gameUid}</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <b style="color:var(--primary-color); display:block; margin-bottom:5px;">${r.kills} Kills</b>
+                                ${screenshotBtn}
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) { container.innerHTML = '<p style="color:red; font-size:13px;">এরর: রেজাল্ট লোড করা যায়নি।</p>'; }
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            document.querySelectorAll('.modal input:not([type="password"])').forEach(inp => {
+                if(inp.id !== "join-uid" && inp.id !== "edit-name" && inp.id !== "edit-uid" && inp.id !== "edit-phone") inp.value = '';
+            });
+        }
+
+        async function submitJoin() {
+            const uid = auth.currentUser.uid;
+            const gameUid = document.getElementById('join-uid').value;
+            let tCode, tName;
+            
+            if(currentMatchCategory === "Solo") {
+                tCode = "SOLO_" + uid; 
+                tName = document.getElementById('u-name').innerText;
+            } else {
+                tCode = document.getElementById('join-team-code').value;
+                tName = document.getElementById('join-team-name').value;
+                if(!tCode || !tName) return alert("টিম কোড এবং টিমের নাম দিন");
+            }
+            if(!gameUid) return alert("গেম UID দিন");
+
+            toggleLoading('submit-join-btn', true, 'Submit');
+
+            try {
+                const teamSnap = await db.ref(`match_joins/${currentMatchId}`).once('value');
+                const joins = teamSnap.val() || {};
+                
+                let alreadyJoined = false;
+                let teamCount = 0;
+                let isCreator = true; 
+
+                Object.values(joins).forEach(j => {
+                    if(j.uid === uid) alreadyJoined = true;
+                    if(j.teamCode === tCode) {
+                        teamCount++;
+                        isCreator = false; 
+                    }
+                });
+
+                if(alreadyJoined) { toggleLoading('submit-join-btn', false, 'Submit'); return alert("আপনি ইতিমধ্যে জয়েন করেছেন!"); }
+                
+                const maxPlayers = currentMatchCategory === "Duo" ? 2 : (currentMatchCategory === "Squad" ? 4 : 1);
+                if(teamCount >= maxPlayers) { toggleLoading('submit-join-btn', false, 'Submit'); return alert(`এই টিমে ${maxPlayers} জন পূর্ণ হয়ে গেছে`); }
+
+                if(isCreator) {
+                    const balSnap = await db.ref(`users/${uid}/balance`).once('value');
+                    const balance = balSnap.val() || 0;
+                    if(balance < currentEntryFee) { toggleLoading('submit-join-btn', false, 'Submit'); return alert("পর্যাপ্ত ব্যালেন্স নেই"); }
+                    await db.ref(`users/${uid}/balance`).set(balance - currentEntryFee);
+                }
+
+                await db.ref(`match_joins/${currentMatchId}`).push({
+                    uid: uid, gameUid: gameUid, teamCode: tCode, teamName: tName, name: document.getElementById('u-name').innerText, isCreator: isCreator 
+                });
+
+                alert(isCreator ? "সফলভাবে জয়েন করেছেন! ফি কাটা হয়েছে।" : "টিমে জয়েন করেছেন! (মেম্বারদের ফি ফ্রি)");
+                closeModal();
+            } catch(e) { alert(e.message); }
+            toggleLoading('submit-join-btn', false, 'Submit');
+        }
+
+        async function viewTeam(mid) {
+            const uid = auth.currentUser.uid;
+            const snap = await db.ref(`match_joins/${mid}`).once('value');
+            const joins = snap.val() || {};
+            
+            let myTeamCode = "";
+            let iAmCreator = false;
+            
+            Object.values(joins).forEach(j => { 
+                if(j.uid === uid) {
+                    myTeamCode = j.teamCode; 
+                    if(j.isCreator) iAmCreator = true;
+                }
+            });
+
+            const listArea = document.getElementById('team-members-list');
+            if(myTeamCode.startsWith("SOLO_")) {
+                listArea.innerHTML = `<h4>আপনার এন্ট্রি</h4>`;
+            } else {
+                listArea.innerHTML = `<h4>টিম কোড: <span style="color:var(--accent-color)">${myTeamCode}</span></h4>`;
+            }
+            
+            Object.entries(joins).forEach(([key, j]) => {
+                if(j.teamCode === myTeamCode) {
+                    const isMe = (j.uid === uid);
+                    let actionBtn = "";
+                    if(isMe) actionBtn = `<span style="color:#ff416c; cursor:pointer; font-weight:bold;" onclick="removeMember('${mid}', '${key}', true)">Leave</span>`;
+                    else if(iAmCreator) actionBtn = `<span style="color:#e74c3c; cursor:pointer; font-size:12px; border:1px solid #e74c3c; padding:3px 8px; border-radius:4px;" onclick="removeMember('${mid}', '${key}', false)">Kick</span>`;
+                    let roleTag = j.isCreator && !myTeamCode.startsWith("SOLO_") ? '<span style="color:gold; font-size:10px; margin-left:5px;"><i class="fas fa-crown"></i> Leader</span>' : '';
+
+                    listArea.innerHTML += `
+                        <div class="team-row">
+                            <div>
+                                <span style="font-weight:bold;">${j.name}</span> ${roleTag}<br>
+                                <span style="font-size:11px; color:#888;">UID: ${j.gameUid}</span>
+                            </div>
+                            ${actionBtn}
+                        </div>`;
+                }
+            });
+            document.getElementById('view-team-modal').style.display = 'flex';
+        }
+
+        function removeMember(mid, joinKey, isSelf) {
+            const msg = isSelf ? "আপনি কি ম্যাচ থেকে বের হতে চান? (টাকা ফেরতযোগ্য নয়)" : "এই মেম্বারকে রিমুভ করতে চান?";
+            if(confirm(msg)) {
+                db.ref(`match_joins/${mid}/${joinKey}`).remove();
+                closeModal();
+            }
+        }
+
+        async function submitMatchResult() {
+            const kills = document.getElementById('res-kills').value;
+            const rank = document.getElementById('res-rank').value;
+            if(!kills || !rank) return alert("কিল এবং পজিশন লিখুন");
+            toggleLoading('btn-submit-result', true, '<i class="fas fa-spinner fa-spin"></i> Submitting...');
+            const uid = auth.currentUser.uid;
+            try {
+                await db.ref(`match_results/${resultMatchId}/${uid}`).set({
+                    name: document.getElementById('u-name').innerText,
+                    gameUid: currentUserGameUid, kills: kills, rank: rank, time: firebase.database.ServerValue.TIMESTAMP
+                });
+                alert("রেজাল্ট ডাটাবেসে সফলভাবে জমা হয়েছে! দয়া করে এখন টেলিগ্রামে গিয়ে আপনার প্রমাণের স্ক্রিনশটটি দিন।");
+                closeModal();
+                const tgLink = document.getElementById('tg-link').href;
+                if(tgLink && tgLink !== "#" && tgLink.includes("t.me")) window.open(tgLink, '_blank');
+                else alert("টেলিগ্রাম লিংক সেট করা নেই বা সঠিক নয়।");
+            } catch (error) { alert("সাবমিট করতে সমস্যা হয়েছে: " + error.message); }
+            toggleLoading('btn-submit-result', false, '<i class="fab fa-telegram"></i> Submit & Send Proof via Telegram');
+        }
+
+        function submitAddMoney() {
+            const method = document.getElementById('am-method').value;
+            const sender = document.getElementById('am-sender').value;
+            const trx = document.getElementById('am-trx').value;
+            const amount = document.getElementById('am-amount').value;
+            if(!sender || !trx || !amount) return alert("তথ্য সঠিকভাবে পূরণ করুন");
+            toggleLoading('btn-submit-add-money', true, 'Send Request');
+            db.ref('payment_requests/add_money').push({
+                uid: auth.currentUser.uid, name: document.getElementById('u-name').innerText, method: method, sender: sender, trxId: trx, amount: Number(amount), status: "Pending", time: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                alert("রিকোয়েস্ট পাঠানো হয়েছে।");
+                closeModal(); loadTransactionHistory(auth.currentUser.uid); toggleLoading('btn-submit-add-money', false, 'Send Request');
+            });
+        }
+
+        async function submitWithdraw() {
+            const method = document.getElementById('wd-method').value;
+            const account = document.getElementById('wd-account').value;
+            const amountStr = document.getElementById('wd-amount').value;
+            const amount = Number(amountStr);
+            if(!account || !amountStr) return alert("তথ্য সঠিকভাবে পূরণ করুন");
+            if(amount < 50) return alert("সর্বনিম্ন উইথড্র ৫০ টাকা");
+            toggleLoading('btn-submit-withdraw', true, 'Submit Request');
+            const uid = auth.currentUser.uid;
+            const balSnap = await db.ref(`users/${uid}/balance`).once('value');
+            const balance = balSnap.val() || 0;
+            if(balance < amount) { toggleLoading('btn-submit-withdraw', false, 'Submit Request'); return alert("পর্যাপ্ত ব্যালেন্স নেই"); }
+            await db.ref(`users/${uid}/balance`).set(balance - amount);
+            db.ref('payment_requests/withdraw').push({
+                uid: uid, name: document.getElementById('u-name').innerText, method: method, account: account, amount: amount, status: "Pending", time: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                alert("উইথড্র রিকোয়েস্ট পাঠানো হয়েছে।");
+                closeModal(); loadTransactionHistory(uid); toggleLoading('btn-submit-withdraw', false, 'Submit Request');
+            });
+        }
+
+        function showPage(pageId, navEl) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if(pageId === 'notif-page') document.getElementById('notif-badge').style.display = 'none';
+            if(navEl) {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
+                navEl.classList.add('active-nav');
+            }
+        }
+
+        function copyText(t) {
+            if(!t || t === "Coming soon" || t === "...") return;
+            navigator.clipboard.writeText(t);
+            alert("কপি হয়েছে: " + t);
+        }
+        
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                .then((registration) => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, (err) => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
