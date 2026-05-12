@@ -38,6 +38,20 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             overflow-x: hidden;
+            
+            /* Anti-Copy Protection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Allow selection only on inputs and specific text */
+        input, select, textarea, .selectable {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
 
         /* Loading & Auth */
@@ -201,7 +215,7 @@
         <div class="container">
             <!-- Home -->
             <div id="home" class="page active">
-                <div id="notice-text" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; border-left: 4px solid yellow;">লোড হচ্ছে...</div>
+                <div id="notice-text" class="selectable" style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; border-left: 4px solid yellow;">লোড হচ্ছে...</div>
                 
                 <!-- Game Filter and Match Tabs -->
                 <div style="margin-bottom: 15px; display: flex; gap: 5px; align-items: center; justify-content: space-between; overflow-x: auto; padding-bottom: 5px;">
@@ -290,8 +304,8 @@
                     <i class="fas fa-cog edit-icon" onclick="openSettingsModal()"></i>
                     <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" width="60" style="border-radius:50%; border:2px solid var(--accent-color);">
                     <h2 id="u-name" style="margin: 10px 0 5px 0;">Loading...</h2>
-                    <p id="u-phone" style="color:#888; margin: 0; font-size: 13px;">01XXXXXXXXX</p>
-                    <p id="u-email" style="color:#aaa; margin: 5px 0 0 0; font-size: 13px;">loading...</p>
+                    <p id="u-phone" class="selectable" style="color:#888; margin: 0; font-size: 13px;">01XXXXXXXXX</p>
+                    <p id="u-email" class="selectable" style="color:#aaa; margin: 5px 0 0 0; font-size: 13px;">loading...</p>
                 </div>
                 
                 <!-- Stats Box -->
@@ -311,12 +325,12 @@
                 </div>
                 
                 <div class="list-item" onclick="copyText(document.getElementById('u-game-uid-text').innerText)">
-                    <span><i class="fas fa-id-card"></i> গেম UID: <b id="u-game-uid-text" style="color: var(--accent-color);">...</b></span>
+                    <span><i class="fas fa-id-card"></i> গেম UID: <b id="u-game-uid-text" class="selectable" style="color: var(--accent-color);">...</b></span>
                     <i class="fas fa-copy"></i>
                 </div>
                 
                 <div class="list-item" onclick="copyText(document.getElementById('u-refer-text').innerText)">
-                    <span><i class="fas fa-gift"></i> রেফার কোড: <b id="u-refer-text">...</b></span>
+                    <span><i class="fas fa-gift"></i> রেফার কোড: <b id="u-refer-text" class="selectable">...</b></span>
                     <i class="fas fa-copy"></i>
                 </div>
 
@@ -387,6 +401,27 @@
                 <input type="text" id="join-team-code" class="auth-input" placeholder="টিম কোড দিন (যেমন: TEAM1)">
                 <input type="text" id="join-team-name" class="auth-input" placeholder="টিমের নাম">
                 <p style="font-size: 11px; color: #ff416c; margin-bottom: 10px;">* প্রথম জয়েনকারীর একাউন্ট থেকে টিমের ফি কাটা হবে। মেম্বারদের ফি লাগবে না।</p>
+                
+                <!-- Manual Teammate Add Section -->
+                <div id="manual-teammates-section" style="display:none; margin-top: 15px; background: #111; padding: 12px; border-radius: 8px; border: 1px dashed var(--accent-color);">
+                    <p style="font-size:12px; color:var(--accent-color); margin: 0 0 10px 0;"><i class="fas fa-users"></i> লিডার চাইলে মেম্বার ম্যানুয়ালি অ্যাড করতে পারেন</p>
+                    
+                    <div id="teammate-1" style="display:none; margin-bottom: 10px;">
+                        <p style="margin: 0 0 5px 0; font-size: 11px; color: #aaa;">Player 2</p>
+                        <input type="number" id="mate1-uid" class="auth-input" placeholder="গেম UID (বাধ্যতামূলক)" style="margin-bottom: 5px;">
+                        <input type="text" id="mate1-name" class="auth-input" placeholder="নাম (অপশনাল)" style="margin-top: 0;">
+                    </div>
+                    <div id="teammate-2" style="display:none; margin-bottom: 10px;">
+                        <p style="margin: 0 0 5px 0; font-size: 11px; color: #aaa;">Player 3</p>
+                        <input type="number" id="mate2-uid" class="auth-input" placeholder="গেম UID (বাধ্যতামূলক)" style="margin-bottom: 5px;">
+                        <input type="text" id="mate2-name" class="auth-input" placeholder="নাম (অপশনাল)" style="margin-top: 0;">
+                    </div>
+                    <div id="teammate-3" style="display:none; margin-bottom: 10px;">
+                        <p style="margin: 0 0 5px 0; font-size: 11px; color: #aaa;">Player 4</p>
+                        <input type="number" id="mate3-uid" class="auth-input" placeholder="গেম UID (বাধ্যতামূলক)" style="margin-bottom: 5px;">
+                        <input type="text" id="mate3-name" class="auth-input" placeholder="নাম (অপশনাল)" style="margin-top: 0;">
+                    </div>
+                </div>
             </div>
             
             <button class="btn btn-join" id="submit-join-btn" onclick="submitJoin()">Submit</button>
@@ -398,7 +433,7 @@
     <div id="rules-modal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; color: var(--accent-color);">ম্যাচের নিয়মাবলি</h3>
-            <div id="rules-text" style="font-size: 13px; line-height: 1.6; color: #ccc; margin-bottom: 15px;"></div>
+            <div id="rules-text" class="selectable" style="font-size: 13px; line-height: 1.6; color: #ccc; margin-bottom: 15px;"></div>
             <button class="btn" style="background:#444" onclick="closeModal()">Close</button>
         </div>
     </div>
@@ -441,8 +476,8 @@
             <h3 style="margin-top:0; color: var(--success);">Add Money</h3>
             <div style="background: #111; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px; border: 1px solid #333;">
                 <p style="margin:5px 0; color:#aaa;">নিচের যেকোনো নাম্বারে সেন্ড মানি করুন:</p>
-                <p style="margin:5px 0;"><b>bKash:</b> <span id="admin-bkash">লোড হচ্ছে...</span></p>
-                <p style="margin:5px 0;"><b>Nagad:</b> <span id="admin-nagad">লোড হচ্ছে...</span></p>
+                <p style="margin:5px 0;"><b>bKash:</b> <span id="admin-bkash" class="selectable">লোড হচ্ছে...</span></p>
+                <p style="margin:5px 0;"><b>Nagad:</b> <span id="admin-nagad" class="selectable">লোড হচ্ছে...</span></p>
             </div>
             
             <select id="am-method" class="auth-input">
@@ -744,7 +779,7 @@
                         } else {
                             if(userJoined) {
                                 actionBtn = `<div style="display:flex; gap:10px; margin-top:10px;">
-                                     <button class="btn btn-view" style="margin-top:0;" onclick="viewTeam('${mid}')">View ${category === 'Solo'?'Entry':'Team'}</button>
+                                     <button class="btn btn-view" style="margin-top:0;" onclick="currentMatchCategory='${category}'; viewTeam('${mid}')">View ${category === 'Solo'?'Entry':'Team'}</button>
                                      <button class="btn btn-success" style="margin-top:0;" onclick="openResultModal('${mid}')">Submit Result</button>
                                    </div>`;
                             } else if(isFull) {
@@ -755,7 +790,7 @@
                         }
 
                         const roomBoxContent = userJoined 
-                            ? `<span style="font-size:12px">ID: ${escapeHTML(m.roomID || 'Coming soon')}</span>
+                            ? `<span style="font-size:12px">ID: <span class="selectable">${escapeHTML(m.roomID || 'Coming soon')}</span></span>
                                <i class="fas fa-copy" style="cursor:pointer;" onclick="copyText('${escapeHTML(m.roomID)}')"></i>`
                             : `<span style="font-size:12px; color: #ff416c;"><i class="fas fa-lock"></i> জয়েন করলে রুম আইডি দেখতে পাবেন</span>`;
 
@@ -868,7 +903,7 @@
                             <div>
                                 <span style="font-size:16px; font-weight:bold; margin-right:8px; color:#aaa;">#${index+1}</span>
                                 <span style="font-weight:bold;">${escapeHTML(u.name)}</span> ${medalIcon}<br>
-                                <span style="font-size:11px; color:#888;">UID: ${escapeHTML(u.uid)}</span>
+                                <span style="font-size:11px; color:#888;">UID: <span class="selectable">${escapeHTML(u.uid)}</span></span>
                             </div>
                             <div style="text-align:right;">
                                 <span style="color:var(--primary-color); font-weight:bold; display:block;">${u.kills} Kills</span>
@@ -900,7 +935,7 @@
                 notifs.forEach(n => {
                     const date = new Date(n.time).toLocaleString('en-GB');
                     notifContainer.innerHTML += `
-                        <div class="notif-item">
+                        <div class="notif-item selectable">
                             <h4 style="margin: 0 0 5px 0;">${escapeHTML(n.title)}</h4>
                             <p style="margin: 0; font-size: 13px; color: #ccc;">${escapeHTML(n.body)}</p>
                             <span class="notif-time">${date}</span>
@@ -998,7 +1033,7 @@
                 transactions.forEach(t => {
                     const date = new Date(t.time).toLocaleDateString('en-GB');
                     txContainer.innerHTML += `
-                        <div class="tx-item tx-${t.status}">
+                        <div class="tx-item tx-${t.status} selectable">
                             <div>
                                 <b style="color:${t.type === 'Add Money' ? 'var(--success)' : '#e74c3c'}">${t.type}</b><br>
                                 <span style="font-size:11px; color:#888;">${date} • ${escapeHTML(t.method)}</span>
@@ -1030,12 +1065,26 @@
         function openJoinModal(mid, entry, category) {
             currentMatchId = mid; currentEntryFee = entry; currentMatchCategory = category;
             document.getElementById('join-uid').value = currentUserGameUid;
+            
+            // Handle Category-specific display for manual entry
             if(category === "Solo") {
                 document.getElementById('join-modal-title').innerText = "ম্যাচে জয়েন করুন (Solo)";
                 document.getElementById('team-inputs').style.display = "none";
+                document.getElementById('manual-teammates-section').style.display = "none";
             } else {
                 document.getElementById('join-modal-title').innerText = `টিমে জয়েন করুন (${category})`;
                 document.getElementById('team-inputs').style.display = "block";
+                document.getElementById('manual-teammates-section').style.display = "block";
+                
+                if(category === "Duo") {
+                    document.getElementById('teammate-1').style.display = "block";
+                    document.getElementById('teammate-2').style.display = "none";
+                    document.getElementById('teammate-3').style.display = "none";
+                } else if(category === "Squad") {
+                    document.getElementById('teammate-1').style.display = "block";
+                    document.getElementById('teammate-2').style.display = "block";
+                    document.getElementById('teammate-3').style.display = "block";
+                }
             }
             document.getElementById('join-modal').style.display = 'flex';
         }
@@ -1067,7 +1116,7 @@
                 results.forEach(r => {
                     let screenshotBtn = `<span style="font-size:11px; color:var(--accent-color);"><i class="fab fa-telegram"></i> Check Telegram</span>`;
                     container.innerHTML += `
-                        <div class="list-item" style="cursor:default; margin-bottom:8px; border-left: 3px solid ${r.rank == 1 ? 'gold' : (r.rank == 2 ? 'silver' : (r.rank == 3 ? '#cd7f32' : '#444'))}">
+                        <div class="list-item selectable" style="cursor:default; margin-bottom:8px; border-left: 3px solid ${r.rank == 1 ? 'gold' : (r.rank == 2 ? 'silver' : (r.rank == 3 ? '#cd7f32' : '#444'))}">
                             <div>
                                 <span style="font-weight:bold; color:${r.rank == 1 ? 'gold' : '#fff'};">Rank: #${r.rank}</span><br>
                                 <span style="font-size:13px;">${escapeHTML(r.name)}</span><br>
@@ -1094,6 +1143,7 @@
             const uid = auth.currentUser.uid;
             const gameUid = document.getElementById('join-uid').value;
             let tCode, tName;
+            let manualMates = [];
             
             if(currentMatchCategory === "Solo") {
                 tCode = "SOLO_" + uid; 
@@ -1102,8 +1152,21 @@
                 tCode = document.getElementById('join-team-code').value;
                 tName = document.getElementById('join-team-name').value;
                 if(!tCode || !tName) return showToast("টিম কোড এবং টিমের নাম দিন", "error");
+                
+                // Read Manual Teammates Info
+                const maxMates = currentMatchCategory === "Duo" ? 1 : 3;
+                for (let i = 1; i <= maxMates; i++) {
+                    const mUid = document.getElementById(`mate${i}-uid`).value;
+                    const mName = document.getElementById(`mate${i}-name`).value || `Teammate ${i+1}`;
+                    if (mUid) {
+                        if (mUid.length < 8 || mUid.length > 12) {
+                            return showToast(`Player ${i+1} এর Game UID ৮-১২ সংখ্যার হতে হবে`, "error");
+                        }
+                        manualMates.push({ uid: mUid, name: mName });
+                    }
+                }
             }
-            if(!gameUid) return showToast("গেম UID দিন", "error");
+            if(!gameUid) return showToast("আপনার গেম UID দিন", "error");
             if(gameUid.length < 8 || gameUid.length > 12) return showToast("গেম UID অবশ্যই ৮-১২ সংখ্যার হতে হবে", "error");
 
             // Prevent Double Clicks immediately
@@ -1127,8 +1190,21 @@
 
                 if(alreadyJoined) { toggleLoading('submit-join-btn', false, 'Submit'); return showToast("আপনি ইতিমধ্যে জয়েন করেছেন!", "error"); }
                 
+                // Only creator can add manual members initially
+                if(manualMates.length > 0 && !isCreator) {
+                    toggleLoading('submit-join-btn', false, 'Submit'); 
+                    return showToast("শুধুমাত্র টিম লিডার ম্যানুয়ালি মেম্বার অ্যাড করতে পারবেন", "error");
+                }
+                
                 const maxPlayers = currentMatchCategory === "Duo" ? 2 : (currentMatchCategory === "Squad" ? 4 : 1);
+                
                 if(teamCount >= maxPlayers) { toggleLoading('submit-join-btn', false, 'Submit'); return showToast(`এই টিমে ${maxPlayers} জন পূর্ণ হয়ে গেছে`, "error"); }
+                
+                // Check if adding manual mates exceeds team limit
+                if(teamCount + 1 + manualMates.length > maxPlayers) {
+                    toggleLoading('submit-join-btn', false, 'Submit'); 
+                    return showToast(`এই টিমে সর্বোচ্চ ${maxPlayers} জন থাকতে পারবে। আপনি বেশি মেম্বার অ্যাড করছেন।`, "error");
+                }
 
                 // Using secure transaction for balance deduction
                 if(isCreator) {
@@ -1148,6 +1224,7 @@
                     }
                 }
 
+                // Add the Main User (Leader or Member)
                 await db.ref(`match_joins/${currentMatchId}`).push({
                     uid: uid, 
                     gameUid: escapeHTML(gameUid), 
@@ -1156,6 +1233,21 @@
                     name: escapeHTML(document.getElementById('u-name').innerText), 
                     isCreator: isCreator 
                 });
+                
+                // Add Manual Teammates if provided by Leader
+                if(manualMates.length > 0 && isCreator) {
+                    for (let i = 0; i < manualMates.length; i++) {
+                        await db.ref(`match_joins/${currentMatchId}`).push({
+                            uid: `MANUAL_${Date.now()}_${i}`, 
+                            gameUid: escapeHTML(manualMates[i].uid), 
+                            teamCode: escapeHTML(tCode), 
+                            teamName: escapeHTML(tName), 
+                            name: escapeHTML(manualMates[i].name), 
+                            isCreator: false,
+                            isManual: true
+                        });
+                    }
+                }
 
                 showToast(isCreator ? "সফলভাবে জয়েন করেছেন! ফি কাটা হয়েছে।" : "টিমে জয়েন করেছেন! (মেম্বারদের ফি ফ্রি)", "success");
                 closeModal();
@@ -1169,11 +1261,14 @@
             const joins = snap.val() || {};
             
             let myTeamCode = "";
+            let myTeamName = "";
             let iAmCreator = false;
+            let teamMembers = [];
             
             Object.values(joins).forEach(j => { 
                 if(j.uid === uid) {
                     myTeamCode = j.teamCode; 
+                    myTeamName = j.teamName;
                     if(j.isCreator) iAmCreator = true;
                 }
             });
@@ -1182,28 +1277,73 @@
             if(myTeamCode.startsWith("SOLO_")) {
                 listArea.innerHTML = `<h4>আপনার এন্ট্রি</h4>`;
             } else {
-                listArea.innerHTML = `<h4>টিম কোড: <span style="color:var(--accent-color)">${escapeHTML(myTeamCode)}</span></h4>`;
+                listArea.innerHTML = `<h4>টিম কোড: <span class="selectable" style="color:var(--accent-color)">${escapeHTML(myTeamCode)}</span></h4>`;
             }
             
             Object.entries(joins).forEach(([key, j]) => {
                 if(j.teamCode === myTeamCode) {
+                    teamMembers.push(j);
                     const isMe = (j.uid === uid);
                     let actionBtn = "";
                     if(isMe) actionBtn = `<span style="color:#ff416c; cursor:pointer; font-weight:bold;" onclick="removeMember('${mid}', '${key}', true)">Leave</span>`;
                     else if(iAmCreator) actionBtn = `<span style="color:#e74c3c; cursor:pointer; font-size:12px; border:1px solid #e74c3c; padding:3px 8px; border-radius:4px;" onclick="removeMember('${mid}', '${key}', false)">Kick</span>`;
+                    
                     let roleTag = j.isCreator && !myTeamCode.startsWith("SOLO_") ? '<span style="color:gold; font-size:10px; margin-left:5px;"><i class="fas fa-crown"></i> Leader</span>' : '';
+                    let manualTag = j.isManual ? '<span style="color:var(--accent-color); font-size:10px; margin-left:5px;"><i class="fas fa-robot"></i> Manual</span>' : '';
 
                     listArea.innerHTML += `
-                        <div class="team-row">
+                        <div class="team-row selectable">
                             <div>
-                                <span style="font-weight:bold;">${escapeHTML(j.name)}</span> ${roleTag}<br>
+                                <span style="font-weight:bold;">${escapeHTML(j.name)}</span> ${roleTag} ${manualTag}<br>
                                 <span style="font-size:11px; color:#888;">UID: ${escapeHTML(j.gameUid)}</span>
                             </div>
                             ${actionBtn}
                         </div>`;
                 }
             });
+
+            // Re-add Teammate functionality if slots are empty and user is Leader
+            const maxPlayers = currentMatchCategory === "Duo" ? 2 : (currentMatchCategory === "Squad" ? 4 : 1);
+            if (iAmCreator && teamMembers.length < maxPlayers && !myTeamCode.startsWith("SOLO_")) {
+                const availableSlots = maxPlayers - teamMembers.length;
+                listArea.innerHTML += `
+                    <div style="margin-top: 15px; padding: 12px; background: #111; border-radius: 8px; border: 1px dashed var(--success);">
+                        <p style="margin: 0 0 10px 0; font-size: 12px; color: var(--success);"><i class="fas fa-user-plus"></i> আরও ${availableSlots} জনকে অ্যাড করতে পারবেন</p>
+                        <input type="number" id="new-mate-uid" class="auth-input" placeholder="গেম UID (বাধ্যতামূলক)" style="padding: 10px; margin-bottom: 5px; font-size:12px;">
+                        <input type="text" id="new-mate-name" class="auth-input" placeholder="নাম (অপশনাল)" style="padding: 10px; margin-bottom: 5px; font-size:12px;">
+                        <button class="btn btn-success" style="padding: 8px; font-size: 13px; margin-top: 5px;" onclick="addSingleManualTeammate('${mid}', '${escapeHTML(myTeamCode)}', '${escapeHTML(myTeamName)}')">অ্যাড করুন</button>
+                    </div>
+                `;
+            }
+
             document.getElementById('view-team-modal').style.display = 'flex';
+        }
+
+        async function addSingleManualTeammate(mid, tCode, tName) {
+            const uidInput = document.getElementById('new-mate-uid').value;
+            const nameInput = document.getElementById('new-mate-name').value || "New Teammate";
+
+            if(!uidInput || uidInput.length < 8 || uidInput.length > 12) {
+                return showToast("সঠিক গেম UID দিন (৮-১২ সংখ্যা)", "error");
+            }
+
+            try {
+                await db.ref(`match_joins/${mid}`).push({
+                    uid: `MANUAL_${Date.now()}`,
+                    gameUid: escapeHTML(uidInput),
+                    teamCode: escapeHTML(tCode),
+                    teamName: escapeHTML(tName),
+                    name: escapeHTML(nameInput),
+                    isCreator: false,
+                    isManual: true
+                });
+
+                showToast("নতুন মেম্বার অ্যাড করা হয়েছে!", "success");
+                // Refresh modal content automatically
+                viewTeam(mid); 
+            } catch(error) {
+                showToast(error.message, "error");
+            }
         }
 
         function removeMember(mid, joinKey, isSelf) {
